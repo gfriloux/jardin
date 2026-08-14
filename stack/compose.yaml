@@ -1,0 +1,125 @@
+# Stack serveur du projet jardin.
+#
+# Volontairement portable : ce fichier doit tourner à l'identique sur le poste
+# de développement, sur un Raspberry Pi ou sur une machine NixOS (ADR-011).
+#
+#   just stack-up              MariaDB + Grafana
+#   just stack-up-collector    idem, plus le collecteur et l'importeur
+#   just db                    un shell SQL sur la base
+#
+# Le profil "ha" (mosquitto + Home Assistant) n'est pas dans le chemin
+# principal : il n'existe que pour la commande d'arrosage de O9, si on
+# décide un jour de s'en servir.
+
+name: jardin
+
+services:
+  # ── La base : un index dérivé, pas la source de vérité ──────────────
+  # L'archive NDJSON reste la référence. Cette base est reconstructible
+  # par réimport, ce qui rend son remplacement ou sa migration indolore.
+  mariadb:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: jardin
+      MARIADB_USER: jardin
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?definir MARIADB_PASSWORD dans stack/.env}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?definir MARIADB_ROOT_PASSWORD dans stack/.env}
+      TZ: Europe/Paris
+    ports:
+      # Boucle locale seulement : Grafana et l'importeur passent par le
+      # réseau interne de la stack. Ce port ne sert qu'aux requêtes à la main.
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      # Ces scripts ne s'exécutent qu'à la création du volume.
+      - ./mariadb/schema:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ── La visualisation, sans écrire une ligne de frontend ─────────────
+  grafana:
+    image: grafana/grafana-oss:13.0.2
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      JARDIN_DB_PASSWORD: ${MARIADB_PASSWORD:?}
+      TZ: Europe/Paris
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+
+  # ── Le collecteur : série → archive NDJSON ──────────────────────────
+  # Il ne connaît ni SQL ni MQTT. Il sait écrire des lignes.
+  collector:
+    profiles: ["collector"]
+    build: ../collector
+    command: ["collect"]
+    restart: unless-stopped
+    environment:
+      JARDIN_SERIAL_PORT: /dev/jardin-gateway
+      JARDIN_DATA_DIR: /data
+      TZ: Europe/Paris
+    devices:
+      # Nom stable donné par une règle udev : sans elle, ttyUSB0 devient
+      # ttyUSB1 au premier rebranchement. Voir stack/README.md.
+      - /dev/jardin-gateway:/dev/jardin-gateway
+    volumes:
+      - ./data:/data
+
+  # ── L'importeur : archive NDJSON → MariaDB, rejouable ───────────────
+  # Même image que le collecteur, autre sous-commande.
+  importer:
+    profiles: ["collector"]
+    build: ../collector
+    command: ["import", "--follow"]
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    environment:
+      JARDIN_DATA_DIR: /data
+      JARDIN_DB_URL: mysql://jardin:${MARIADB_PASSWORD:?}@mariadb:3306/jardin
+      TZ: Europe/Paris
+    volumes:
+      - ./data:/data:ro
+
+  # ── Optionnel : Home Assistant, pour la commande d'arrosage (O9) ────
+  mosquitto:
+    profiles: ["ha"]
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto-data:/mosquitto/data
+
+  homeassistant:
+    profiles: ["ha"]
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    ports:
+      - "8123:8123"
+    environment:
+      TZ: Europe/Paris
+    volumes:
+      - homeassistant-config:/config
+
+volumes:
+  mariadb-data:
+  grafana-data:
+  mosquitto-data:
+  homeassistant-config:
