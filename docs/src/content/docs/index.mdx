@@ -1,0 +1,64 @@
+---
+title: Jardin
+description: Réseau de télémétrie du terrain — sondes d'humidité du sol, LoRa, et à terme irrigation automatisée.
+template: splash
+hero:
+  tagline: Un petit réseau de télémétrie pour le terrain, dont la première application est une allée de fraisiers.
+  actions:
+    - text: Le contexte
+      link: /projet/contexte/
+      icon: right-arrow
+      variant: primary
+    - text: La feuille de route
+      link: /projet/feuille-de-route/
+      icon: rocket
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+  <Card title="Le problème" icon="sun">
+    Les canicules à répétition rendent l'arrosage à l'aveugle intenable. Avant
+    d'automatiser quoi que ce soit, il faut **savoir** ce que fait réellement
+    l'eau dans le sol.
+  </Card>
+  <Card title="L'approche" icon="setting">
+    Pas une station météo connectée : un réseau de nœuds autonomes qui
+    mesurent et transmettent, et une collecte totalement découplée du matériel.
+  </Card>
+  <Card title="La méthode" icon="list-format">
+    Dix objectifs numérotés, chacun avec un critère de sortie vérifiable. On
+    n'attaque pas le suivant tant que le précédent n'est pas tenu.
+  </Card>
+  <Card title="L'état" icon="approve-check">
+    **O0 tenu** — dépôt, devshell Nix, documentation.
+    Le matériel du POC arrive les 15 et 16 août 2026.
+  </Card>
+</CardGrid>
+
+## Par où entrer
+
+<LinkCard
+  title="Contexte et objectif"
+  description="Pourquoi ce projet existe, ce qu'on cherche à mesurer, et ce qu'on refuse de construire tout de suite."
+  href="/projet/contexte/"
+/>
+
+<LinkCard
+  title="Feuille de route"
+  description="Le graphe des dix objectifs, du premier octet lu sur l'ADC jusqu'aux électrovannes."
+  href="/projet/feuille-de-route/"
+/>
+
+<LinkCard
+  title="Inventaire du matériel"
+  description="Les six commandes passées, ce que chaque pièce fait, et ce qui n'a volontairement pas été acheté."
+  href="/materiel/inventaire/"
+/>
+
+<LinkCard
+  title="Décisions d'architecture"
+  description="LoRa point-à-point, valeur ADC brute, modèle de données générique — et pourquoi."
+  href="/decisions/"
+/>

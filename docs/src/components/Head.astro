@@ -1,0 +1,69 @@
+---
+import Default from '@astrojs/starlight/components/Head.astro';
+---
+
+<Default><slot /></Default>
+
+<script>
+  (async () => {
+    const nodes = Array.from(
+      document.querySelectorAll<HTMLPreElement>('pre.mermaid'),
+    );
+    if (nodes.length === 0) return;
+
+    // mermaid remplace le contenu du <pre> par un SVG : on garde la source
+    // pour pouvoir re-rendre au changement de thème.
+    const sources = new Map(nodes.map((node) => [node, node.textContent ?? '']));
+
+    // Les diagrammes sont masqués tant qu'ils ne sont pas rendus. Sans ce
+    // repli, la moindre erreur les ferait disparaître sans un mot : on
+    // réaffiche alors la source brute, signalée comme telle.
+    const fallback = (error: unknown) => {
+      console.error('[mermaid] rendu impossible', error);
+      for (const [node, source] of sources) {
+        node.textContent = source;
+        node.setAttribute('data-mermaid-error', '');
+      }
+    };
+
+    let mermaid;
+    try {
+      ({ default: mermaid } = await import('mermaid'));
+    } catch (error) {
+      fallback(error);
+      return;
+    }
+
+    const render = async () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      for (const [node, source] of sources) {
+        node.removeAttribute('data-processed');
+        node.textContent = source;
+      }
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        theme: dark ? 'dark' : 'default',
+        fontFamily: 'var(--sl-font)',
+        themeVariables: {
+          background: dark ? '#17191e' : '#ffffff',
+        },
+        flowchart: { curve: 'basis', useMaxWidth: true },
+      });
+      await mermaid.run({ nodes });
+    };
+
+    try {
+      await render();
+    } catch (error) {
+      fallback(error);
+      return;
+    }
+
+    // Starlight bascule le thème via data-theme sur <html>.
+    new MutationObserver(() => void render().catch(fallback)).observe(
+      document.documentElement,
+      { attributeFilter: ['data-theme'] },
+    );
+  })();
+</script>

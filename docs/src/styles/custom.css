@@ -1,0 +1,229 @@
+:root {
+  --sl-color-accent-low: #1a2e1c;
+  --sl-color-accent: #3f8f43;
+  --sl-color-accent-high: #b9dfb8;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #c9e5c6;
+  --sl-color-accent: #2f7a34;
+  --sl-color-accent-high: #14331a;
+}
+
+/* Diagrammes Mermaid : masqués tant que le rendu client n'a pas eu lieu,
+   pour éviter le flash de la source brute. */
+pre.mermaid {
+  margin: 1.5rem 0;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 120ms ease-in;
+}
+
+pre.mermaid[data-processed],
+pre.mermaid[data-mermaid-error] {
+  opacity: 1;
+}
+
+/* Repli : si le rendu échoue, on montre la source plutôt que rien du tout. */
+pre.mermaid[data-mermaid-error] {
+  padding: 1rem;
+  border: 1px solid var(--sl-color-orange);
+  border-radius: 0.25rem;
+  background: var(--sl-color-orange-low);
+  text-align: left;
+  overflow-x: auto;
+  font-size: 0.85em;
+}
+
+pre.mermaid[data-mermaid-error]::before {
+  content: 'Diagramme non rendu — source ci-dessous, détail dans la console.';
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: var(--sl-color-orange-high);
+}
+
+pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tableaux d'inventaire : éviter que la colonne "pourquoi" écrase le reste. */
+.sl-markdown-content table {
+  display: block;
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* Schémas dessinés à la main, en SVG inline. Ils suivent le thème via
+   currentColor et les variables Starlight ; les fils gardent en revanche
+   leurs vraies couleurs, puisque c'est ce qu'on cherche à reconnaître. */
+.schema {
+  margin: 1.5rem 0;
+}
+
+.schema svg {
+  width: 100%;
+  height: auto;
+  color: var(--sl-color-gray-2);
+}
+
+.schema .boitier {
+  fill: var(--sl-color-gray-6);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.schema .breadboard {
+  fill: var(--sl-color-gray-6);
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.schema .trous line {
+  stroke: currentColor;
+  stroke-width: 1;
+  stroke-dasharray: 2 6;
+  opacity: 0.5;
+}
+
+.schema .lame {
+  fill: var(--sl-color-gray-5);
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.schema .trait-grad {
+  stroke: var(--sl-color-orange);
+  stroke-width: 2;
+}
+
+.schema .ecran {
+  fill: var(--sl-color-gray-4);
+  stroke: currentColor;
+  stroke-width: 1;
+}
+
+.schema .antenne {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.schema .pastille {
+  fill: var(--sl-color-accent);
+}
+
+.schema .fil {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.schema .rouge {
+  stroke: #d94a3d;
+}
+.schema .noir {
+  stroke: #6b7280;
+}
+.schema .jaune {
+  stroke: #d9a520;
+}
+
+.schema text {
+  fill: currentColor;
+  font-family: var(--sl-font);
+}
+
+.schema .titre {
+  font-size: 15px;
+  font-weight: 600;
+}
+.schema .etiq {
+  font-size: 12px;
+}
+.schema .mini {
+  font-size: 10px;
+  opacity: 0.75;
+}
+.schema .note {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Fond de plan de la parcelle, produit par tools/plan-parcelle.py. */
+.plan svg {
+  width: 100%;
+  max-width: 32rem;
+  height: auto;
+  color: var(--sl-color-gray-2);
+}
+
+.plan .grid {
+  stroke: currentColor;
+  stroke-width: 0.5;
+  opacity: 0.18;
+}
+
+.plan .grid--major {
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+.plan .parcelle {
+  fill: var(--sl-color-accent-low);
+  fill-opacity: 0.35;
+  stroke: var(--sl-color-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.plan .tick,
+.plan .echelle {
+  fill: currentColor;
+  font-family: var(--sl-font);
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.plan .nord line {
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.plan .nord circle {
+  fill: currentColor;
+}
+
+.plan .nord text {
+  fill: currentColor;
+  font-family: var(--sl-font);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Statuts d'objectifs dans la feuille de route. */
+.statut {
+  display: inline-block;
+  padding: 0.1em 0.6em;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statut--fait {
+  background: var(--sl-color-green-low);
+  color: var(--sl-color-green-high);
+}
+.statut--encours {
+  background: var(--sl-color-orange-low);
+  color: var(--sl-color-orange-high);
+}
+.statut--attente {
+  background: var(--sl-color-gray-6);
+  color: var(--sl-color-gray-2);
+}
