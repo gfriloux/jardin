@@ -70,6 +70,41 @@ $ just db-wiring
 
 Puis une semaine de mesures lisible à la fois dans Grafana et dans l'archive.
 
+## Le simulateur de nœud
+
+Écrit avant le collecteur, et volontairement : il permet d'éprouver toute la
+chaîne serveur **sans matériel**.
+
+```console
+$ just sim-serie        # un port série virtuel sur /tmp/jardin-gateway
+$ just sim-archive 21   # trois semaines d'historique dans l'archive
+```
+
+Le but n'est pas de jouer, c'est de **découpler les pannes**. Si la chaîne
+serveur est prouvée avec des données synthétiques, alors le jour où le matériel
+arrive, ce qui casse est forcément le matériel ou le firmware — on ne débogue
+plus deux inconnues à la fois, une carte neuve dans les mains.
+
+Il reproduit ce qu'on cherchera réellement à observer, plutôt que des nombres au
+hasard :
+
+| Phénomène | Pourquoi il compte |
+|---|---|
+| Assèchement exponentiel, arrosages espacés | la forme des courbes de [O8](/objectifs/o8-exploitation/) |
+| **Dispersion inter-sondes** (±8 % sur les bornes sec/saturé) | reproduit la découverte que [O3](/objectifs/o3-calibration/) doit faire |
+| Effet de profondeur : la couche à 20 cm réagit moins et plus tard | l'observation qui motive deux profondeurs par zone |
+| Oscillation thermique jour/nuit | l'effet qui justifiera une sonde de température |
+| Trames perdues, trous dans `seq` | de quoi mesurer un taux de perte |
+| Lignes parasites de démarrage (`ets Jul 29 2019…`) | ce qui fait planter un parseur naïf |
+| Redémarrages, `seq` qui repart à 0 | à détecter côté collecteur |
+
+Une implémentation **indépendante** du collecteur, en Python : elle ne partage
+pas ses hypothèses, ce qui est précisément ce qui rend le test valable.
+
+Les parasites n'existent que sur la liaison série — l'archive, elle, ne contient
+que des trames valides. C'est une propriété du collecteur, et le simulateur la
+respecte pour ne pas donner un faux sentiment de robustesse à l'importeur.
+
 ## Pourquoi une archive en plus de la base
 
 Une ligne JSON par trame, jamais réécrite, dans le format le plus bête possible.

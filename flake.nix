@@ -42,6 +42,9 @@
             # hardware/ — coque des sondes, modèle paramétrique
             openscad
 
+            # tools/ — fond de plan cadastral, simulateur de nœud
+            python3
+
             # stack de test locale
             mosquitto
             jq

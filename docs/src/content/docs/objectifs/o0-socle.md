@@ -39,6 +39,7 @@ qu'aucune reprise ne commence par une demi-journée d'installation :
 | `platformio`, `esptool`, `picocom` | le firmware ESP32-S3 |
 | `cargo`, `rustc`, `clippy`, `rustfmt`, `rust-analyzer`, `pkg-config`, `udev` | le collecteur Rust |
 | `openscad` | la [coque des sondes](/materiel/coque-des-sondes/) |
+| `python3` | les outils de `tools/` — fond de plan, simulateur |
 | `mosquitto`, `jq` | outillage d'appoint |
 
 ```console
@@ -91,6 +92,8 @@ Côté stack serveur :
 | `just db-wiring` | quelle sonde est branchée où, en ce moment |
 | `just db-reset` | recrée l'index — **jamais** l'archive |
 | `just coque-stl` | régénère les STL de la coque depuis le `.scad` |
+| `just sim-serie` | un port série virtuel, sans matériel |
+| `just sim-archive 21` | trois semaines d'historique synthétique |
 
 Et côté firmware :
 

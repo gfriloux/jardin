@@ -93,6 +93,26 @@ coque-preview:
 coque-clean:
     rm -rf hardware/coque/build
 
+# ─── Simulateur de nœud ─────────────────────────────────────────────────────
+
+# Port série virtuel, comme si GATEWAY-001 était branchée (Ctrl-C pour arrêter).
+# Le collecteur l'ouvrira sur /tmp/jardin-gateway.
+sim-serie vitesse="600":
+    tools/simulateur-noeud.py --out pty --link /tmp/jardin-gateway --speed {{ vitesse }}
+
+# Fabrique un historique synthétique dans l'archive (ex : just sim-archive 21).
+sim-archive jours="14":
+    tools/simulateur-noeud.py --archive-dir stack/data --duration {{ jours }}
+    @find stack/data -name '*.ndjson' -exec wc -l {} +
+
+# Regarde passer quelques trames, sans rien écrire.
+sim-voir:
+    tools/simulateur-noeud.py --speed 0 --duration 0.02
+
+# Efface l'archive synthétique. À ne PAS lancer sur des mesures réelles.
+sim-clean:
+    rm -rf stack/data/[0-9]*
+
 # ─── Stack serveur ──────────────────────────────────────────────────────────
 
 # Démarre MariaDB et Grafana (http://localhost:3000).
