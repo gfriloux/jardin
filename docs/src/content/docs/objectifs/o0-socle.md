@@ -66,6 +66,26 @@ Deux subtilités NixOS méritent d'être notées, parce qu'elles bloquent net :
   le port en `0666` et surtout empêchent ModemManager de le sonder — détail dans
   [O1](/objectifs/o1-une-sonde/#la-seule-chose-qui-demande-sudo).
 
+### Tout est épinglé
+
+Une reprise dans six mois doit reconstruire à l'identique, sinon le devshell ne
+sert à rien. Chaque chaîne d'outils a donc son verrou :
+
+| Quoi | Verrou |
+|---|---|
+| nixpkgs | `flake.lock` |
+| documentation | `docs/package-lock.json` |
+| collecteur | `collector/Cargo.lock` |
+| images de la stack | tags explicites dans `compose.yaml` |
+| **firmware** | `firmware/platformio.ini` lui-même |
+
+Le dernier est le piège : **PlatformIO n'a pas de fichier de verrouillage**. Un
+`platform = espressif32` sans version saute silencieusement à la suivante dès
+qu'Espressif publie, emportant le cœur Arduino et toute la chaîne de
+compilation. Sur une carte qui est déjà un clone au brochage incertain, un
+croquis qui cesse de fonctionner après une montée de version invisible
+enverrait soupçonner le matériel.
+
 ### Les tâches
 
 Un `justfile` à la racine porte les commandes courantes, pour qu'aucune ne soit
