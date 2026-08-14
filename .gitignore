@@ -1,0 +1,32 @@
+# Nix
+result
+result-*
+.direnv/
+
+# Astro / Node
+node_modules/
+docs/dist/
+docs/.astro/
+.npm/
+
+# PlatformIO
+.pio/
+firmware/.pio/
+
+# Rust
+target/
+collector/target/
+
+# Coque — les STL sont générés depuis le .scad, qui est la source de vérité
+hardware/coque/build/
+
+# Stack serveur — l'archive brute des mesures n'a pas à être versionnée
+stack/data/*
+!stack/data/.gitkeep
+
+# Divers
+.DS_Store
+*.log
+
+# Secrets de la stack
+stack/.env
