@@ -66,6 +66,9 @@ services:
     build: ../collector
     command: ["collect"]
     restart: unless-stopped
+    # Les fichiers de l'archive doivent appartenir à l'utilisateur de l'hôte :
+    # c'est lui qui les sauvegardera et les relira hors conteneur.
+    user: "${JARDIN_UID:-1000}:${JARDIN_GID:-1000}"
     environment:
       JARDIN_SERIAL_PORT: /dev/jardin-gateway
       JARDIN_DATA_DIR: /data
@@ -84,6 +87,7 @@ services:
     build: ../collector
     command: ["import", "--follow"]
     restart: unless-stopped
+    user: "${JARDIN_UID:-1000}:${JARDIN_GID:-1000}"
     depends_on:
       mariadb:
         condition: service_healthy

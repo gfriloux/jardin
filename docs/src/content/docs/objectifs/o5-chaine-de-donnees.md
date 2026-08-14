@@ -55,6 +55,59 @@ C'est tout. Il ne connaît ni SQL ni MQTT : il sait écrire des lignes.
 La calibration n'est appliquée nulle part : elle est calculée à la lecture par
 une vue SQL. Voir [ADR-012](/decisions/#adr-012--larchive-ndjson-est-le-bus-mqtt-sort-du-chemin-principal).
 
+### `collect` ne comprend pas ce qu'il transporte
+
+C'est délibéré, et c'est le point de conception le plus important du collecteur.
+Il valide que la ligne est du JSON, en extrait `frame.node` pour choisir le
+fichier, et **recopie tout le reste sans l'interpréter**. Le jour où le firmware
+ajoutera un champ, celui-ci traversera l'archive intact au lieu d'être
+silencieusement perdu.
+
+Trois propriétés qui en découlent, toutes vérifiées par des tests :
+
+- les entiers restent entiers — `1834`, jamais `1834.0` ;
+- le bruit de démarrage de la carte (`ets Jul 29 2019…`) est signalé et ignoré,
+  sans interrompre la collecte ;
+- le nom du nœud est **filtré avant de servir de nom de fichier**. Le nœud
+  contrôle cette chaîne : une trame annonçant `"node": "../../etc/cron.d/x"`
+  ferait sinon écrire le collecteur hors de son répertoire.
+
+Chaque ligne est vidée sur disque immédiatement. À quelques trames par minute,
+le coût est nul, et une coupure de courant ne fait pas perdre le tampon.
+
+### `import` est rejouable
+
+Deux mécanismes complémentaires :
+
+- un **repère d'avancement** par fichier (`import_state`), pour reprendre où on
+  s'est arrêté plutôt que de tout relire ;
+- l'**unicité de `(source_file, source_line)`**, qui garantit qu'une ligne déjà
+  connue ne peut pas être insérée deux fois, même si le repère est faux.
+
+`--rejouer` efface les repères et relit toute l'archive : l'opération est sans
+effet de bord, et c'est ce qui rend la base jetable.
+
+Un nœud inconnu est **créé automatiquement**, avec un libellé explicite. Refuser
+la trame ferait perdre des mesures parce que le matériel n'a pas encore été
+déclaré ; `v_current_wiring` montrera ses voies sans sonde attachée, ce qui est
+le rappel qu'il reste à le faire.
+
+### D'où vient le type d'une mesure
+
+La trame ne le transporte pas : le nœud émet `"soil-01": 1834`, sans dire ce que
+c'est. La table `channel_convention` fait la correspondance par préfixe, le plus
+long l'emportant :
+
+```text
+soil-      → soil_moisture / raw
+soiltemp-  → soil_temperature / degC
+battery    → voltage / V
+```
+
+Déclaratif plutôt que codé en dur : ajouter un type ne demande pas de
+recompiler. Et indépendant des déclarations de matériel, donc les mesures
+rentrent même avant qu'on ait déclaré quoi que ce soit.
+
 ## Le contrôle de fin d'objectif
 
 ```console

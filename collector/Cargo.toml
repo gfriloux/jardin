@@ -1,0 +1,29 @@
+[package]
+name = "jardin-collector"
+version = "0.1.0"
+edition = "2021"
+description = "Collecte les trames de la passerelle LoRa et alimente l'index MariaDB"
+license = "MIT"
+
+[[bin]]
+name = "jardin"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive", "env"] }
+# preserve_order : l'archive garde l'ordre des champs, received_at en tête.
+serde_json = { version = "1", features = ["preserve_order"] }
+serde = { version = "1", features = ["derive"] }
+# default-features = false retire libudev, qui ne sert qu'à énumérer les ports.
+# On ouvre un chemin fixe (/dev/jardin-gateway), donc c'est une dépendance
+# système en moins dans l'image.
+serialport = { version = "4", default-features = false }
+mysql = { version = "26", default-features = false, features = ["minimal"] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true

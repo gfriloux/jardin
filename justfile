@@ -93,6 +93,25 @@ coque-preview:
 coque-clean:
     rm -rf hardware/coque/build
 
+# ─── Collecteur ─────────────────────────────────────────────────────────────
+
+# Compile le collecteur.
+col-build:
+    cd collector && cargo build --release
+
+# Tests unitaires et clippy.
+col-check:
+    cd collector && cargo test && cargo clippy --all-targets -- -D warnings
+
+# Collecte depuis le port série simulé, vers l'archive (Ctrl-C pour arrêter).
+col-collect port="/tmp/jardin-gateway":
+    cd collector && cargo run --quiet -- collect --port {{ port }} --data-dir ../stack/data
+
+# Importe l'archive dans la base, depuis l'hôte.
+col-import *args:
+    cd collector && cargo run --quiet -- import --data-dir ../stack/data \
+        --db-url "mysql://jardin:$(grep '^MARIADB_PASSWORD=' ../stack/.env | cut -d= -f2-)@127.0.0.1:3306/jardin" {{ args }}
+
 # ─── Simulateur de nœud ─────────────────────────────────────────────────────
 
 # Port série virtuel, comme si GATEWAY-001 était branchée (Ctrl-C pour arrêter).
@@ -170,6 +189,3 @@ fmt:
 # Installe les dépendances si node_modules est absent.
 _docs-deps:
     @[ -d {{ docs }}/node_modules ] || (cd {{ docs }} && npm install --no-audit --no-fund)
-
-# Les tâches firmware/ (pio run, pio device monitor) et collector/ (cargo run)
-# seront ajoutées quand ces répertoires existeront — voir O1 et O5.

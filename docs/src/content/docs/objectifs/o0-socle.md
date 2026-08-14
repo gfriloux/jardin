@@ -24,7 +24,7 @@ jardin/
 ├── docs/              cette documentation (Astro + Starlight)
 ├── firmware/          PlatformIO, ESP32-S3 — les croquis de O1
 ├── stack/             compose.yaml — MariaDB, Grafana, collecteur
-└── collector/         à venir — Rust, série → archive → MariaDB
+└── collector/         Rust — série → archive → MariaDB
 ```
 
 ### Le devshell
@@ -94,6 +94,8 @@ Côté stack serveur :
 | `just coque-stl` | régénère les STL de la coque depuis le `.scad` |
 | `just sim-serie` | un port série virtuel, sans matériel |
 | `just sim-archive 21` | trois semaines d'historique synthétique |
+| `just col-check` | tests et clippy du collecteur |
+| `just col-import` | importe l'archive dans la base |
 
 Et côté firmware :
 
@@ -132,4 +134,4 @@ qui empêche de tout reperdre.
 - **Publication du site.** Pas encore décidé : GitHub Pages demanderait de
   configurer `site` et `base` dans `astro.config.mjs`. Tant que la doc n'est
   lue que localement, ça n'a pas d'intérêt.
-- **`collector/`** est vide : il s'écrit à [O5](/objectifs/o5-chaine-de-donnees/).
+- **Publication de la doc** et **dépôt distant** restent à décider.
