@@ -133,6 +133,22 @@ services.udev.packages = [ inputs.jardin.packages.x86_64-linux.udev-rules ];
 Contournement à chaud, si jamais un port reste inaccessible :
 `sudo chmod 666 /dev/ttyUSB0`. Ça marche, ça ne survit pas au débranchement.
 
+:::note[Un avertissement de PlatformIO à ignorer]
+```text
+Warning! Please install `99-platformio-udev.rules`.
+```
+
+C'est un **faux positif**, et il apparaîtra à chaque téléversement. Le paquet
+`platformio` de nixpkgs est un environnement FHS : il remplace `/etc` par un
+tmpfs et n'y remonte qu'une liste blanche d'entrées de l'hôte, dont `/etc/udev`
+ne fait pas partie. PlatformIO cherche donc le fichier depuis l'intérieur de sa
+cage, où il n'existe pas.
+
+Les règles sont bel et bien installées et actives : **udev tourne sur l'hôte**,
+pas dans le bac à sable. La preuve qui compte est ailleurs — au branchement, le
+port apparaît en `0666`.
+:::
+
 ## Étape 1 — Sortir la carte et visser l'antenne
 
 :::danger[À faire avant toute mise sous tension]
@@ -162,6 +178,22 @@ Description: CP2102N USB to UART Bridge Controller
 Le nom peut être `/dev/ttyUSB0` ou `/dev/ttyACM0`. La puce d'interface de cette
 carte est une CP210x, gérée nativement par le noyau Linux — aucun pilote à
 installer.
+
+:::danger[`/dev/ttyS0` et `/dev/ttyS3` ne sont pas ta carte]
+Ce sont les ports série de la **carte mère**. Ils existent toujours, carte
+branchée ou non. Sans garde-fou, PlatformIO ne trouve aucun port USB, se rabat
+sur eux, et tente d'y téléverser un firmware ESP32 :
+
+```text
+Auto-detected: /dev/ttyS0
+A fatal error occurred: Could not open /dev/ttyS0, the port is busy or doesn't exist.
+Hint: Try to add user into dialout or uucp group.
+```
+
+Le message parle de permissions, ce qui envoie chercher au mauvais endroit : le
+vrai problème est qu'**il n'y a pas de carte**. C'est pour ça que `just fw`
+refuse désormais de démarrer sans port USB, avec un message qui le dit.
+:::
 
 **Si rien n'apparaît :** essaie un autre câble USB. Beaucoup de câbles vendus
 avec des téléphones ne transportent que le courant, pas les données. C'est de

@@ -54,11 +54,18 @@ fw-list:
 
 # Liste les cartes détectées sur les ports USB.
 fw-ports:
-    pio device list
+    @ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || echo "aucun port série USB"
+    @pio device list
 
 # Compile, téléverse et ouvre le moniteur série (ex : just fw 01-blink).
 fw croquis:
-    cd firmware && pio run -e {{ croquis }} -t upload && pio device monitor -e {{ croquis }}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    port=$(just _fw-port)
+    echo "carte détectée sur $port"
+    cd firmware
+    pio run -e {{ croquis }} -t upload --upload-port "$port"
+    pio device monitor -e {{ croquis }} --port "$port"
 
 # Compile un croquis sans le téléverser (ex : just fw-build 03-radio).
 fw-build croquis:
@@ -66,7 +73,36 @@ fw-build croquis:
 
 # Ouvre le moniteur série sans recompiler (ex : just fw-monitor 04-sonde).
 fw-monitor croquis:
-    cd firmware && pio device monitor -e {{ croquis }}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd firmware && pio device monitor -e {{ croquis }} --port "$(just _fw-port)"
+
+# Trouve le port USB de la carte, ou échoue en expliquant pourquoi.
+#
+# Sans ce garde-fou, PlatformIO se rabat sur le premier port série venu — et
+# /dev/ttyS0, le port série de la carte mère, en est un. Il tente alors d'y
+# téléverser un firmware ESP32, ce qui ne peut pas marcher et produit un
+# message d'erreur qui n'évoque à aucun moment l'absence de carte.
+_fw-port:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    port=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null | head -1 || true)
+    if [ -z "$port" ]; then
+      echo "Aucune carte sur un port USB." >&2
+      echo >&2
+      echo "  - la carte est-elle branchée ?" >&2
+      echo "  - le câble transporte-t-il les données ? Beaucoup de câbles" >&2
+      echo "    fournis avec des téléphones ne transportent que le courant." >&2
+      echo "  - /dev/ttyS0 est le port série de la carte mère, pas la carte." >&2
+      exit 1
+    fi
+    if [ ! -r "$port" ] || [ ! -w "$port" ]; then
+      echo "$port existe mais n'est pas accessible." >&2
+      echo "Les règles udev le mettent normalement en 0666 — reconnecter la" >&2
+      echo "session si le groupe dialout vient d'être ajouté." >&2
+      exit 1
+    fi
+    echo "$port"
 
 # Compile tous les croquis. Ne nécessite aucune carte branchée.
 fw-check:
