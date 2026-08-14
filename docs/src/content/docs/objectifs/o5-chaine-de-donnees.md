@@ -158,6 +158,38 @@ Les parasites n'existent que sur la liaison série — l'archive, elle, ne conti
 que des trames valides. C'est une propriété du collecteur, et le simulateur la
 respecte pour ne pas donner un faux sentiment de robustesse à l'importeur.
 
+## Le tableau de bord
+
+Provisionné par fichier — `stack/grafana/provisioning/dashboards/` — donc
+versionné avec le reste. Il apparaît tout seul au démarrage de la stack, sans
+rien cliquer.
+
+Six panneaux, chacun répondant à la question d'un objectif :
+
+| Panneau | Ce qu'il sert à voir |
+|---|---|
+| **Nœuds** | âge de la dernière trame, taux de perte, RSSI, batterie. Une ligne par carte |
+| **Valeur brute d'ADC** | ce qui est réellement stocké. La valeur **descend** quand l'humidité monte |
+| **Humidité calibrée** | la même chose interprétée. Reste vide tant que [O3](/objectifs/o3-calibration/) n'a pas produit de calibration |
+| **Écart entre sondes de même profondeur** | la question de O3 : ce qui reste après regroupement par profondeur est la dispersion propre des sondes |
+| **Qualité du lien radio** | RSSI et SNR, pour [O4](/objectifs/o4-lien-radio/) et [O7](/objectifs/o7-mise-au-jardin/) |
+| **Tension d'alimentation** | peu informative sur powerbank, elle le deviendra à [O6](/objectifs/o6-autonomie/) |
+
+Le taux de perte est estimé par les trous dans le compteur de séquence, **en
+excluant les redémarrages** — un `seq` qui repart à 0 n'est pas une perte.
+
+:::caution[Le fuseau horaire, piège silencieux]
+Le collecteur horodate en UTC et les colonnes `DATETIME` ne portent pas de
+fuseau. La source de données Grafana doit donc annoncer **`timezone: UTC`** :
+y mettre `Europe/Paris` décale tout l'historique de deux heures en été, sans
+aucun message d'erreur. L'affichage dans le fuseau local est le travail du
+tableau de bord, pas de la source de données.
+:::
+
+**Pour expérimenter** : le fichier fait foi, l'interface ne peut pas
+l'écraser. « Save as » crée une copie où tinkerer librement ; ce qui mérite
+d'être gardé se reporte dans le JSON versionné.
+
 ## Pourquoi une archive en plus de la base
 
 Une ligne JSON par trame, jamais réécrite, dans le format le plus bête possible.

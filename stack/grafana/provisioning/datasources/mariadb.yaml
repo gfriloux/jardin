@@ -13,7 +13,11 @@ datasources:
     secureJsonData:
       password: $JARDIN_DB_PASSWORD
     jsonData:
-      timezone: Europe/Paris
+      # UTC, et pas le fuseau local : le collecteur horodate en UTC, et les
+      # colonnes DATETIME ne portent pas de fuseau. Annoncer Europe/Paris ici
+      # décalerait tout l'historique de deux heures en été, silencieusement.
+      # L'affichage dans le fuseau du lecteur est le travail du tableau de bord.
+      timezone: UTC
       # Les tables sont minuscules à l'échelle d'un jardin : quelques
       # millions de lignes par an au maximum.
       maxOpenConns: 10

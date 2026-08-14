@@ -1,0 +1,512 @@
+{
+  "uid": "jardin-vue-ensemble",
+  "title": "Jardin — vue d'ensemble",
+  "description": "Provisionné par fichier : stack/grafana/provisioning/dashboards/. Les modifications faites ici ne sont pas enregistrées — utiliser « Save as » pour expérimenter, puis reporter dans le fichier.",
+  "tags": [
+    "jardin"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "schemaVersion": 39,
+  "refresh": "1m",
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "État des nœuds",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "table",
+      "title": "Nœuds",
+      "description": "Une ligne par carte LoRa. « Dernière trame » est l'âge de la plus récente : au-delà de deux périodes d'émission, le nœud est muet. La perte est estimée par les trous dans le compteur de séquence ; les redémarrages, où seq repart à 0, sont exclus du calcul.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 24,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Derniere trame"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background",
+                  "mode": "gradient"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 900
+                    },
+                    {
+                      "color": "red",
+                      "value": 3600
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Perte"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 5
+                    },
+                    {
+                      "color": "red",
+                      "value": 20
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "RSSI moyen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dBm"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Batterie"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "volt"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH ecarts AS (\n  SELECT f.node_id, f.seq,\n         LAG(f.seq) OVER (PARTITION BY f.node_id ORDER BY f.received_at) AS prec\n    FROM frame f\n   WHERE $__timeFilter(f.received_at)\n)\nSELECT\n  n.uid                                                        AS 'Noeud',\n  TIMESTAMPDIFF(SECOND, MAX(f.received_at), UTC_TIMESTAMP())   AS 'Derniere trame',\n  COUNT(*)                                                     AS 'Trames',\n  (SELECT ROUND(100 * SUM(GREATEST(e.seq - e.prec - 1, 0))\n                    / (COUNT(*) + SUM(GREATEST(e.seq - e.prec - 1, 0))), 1)\n     FROM ecarts e\n    WHERE e.node_id = n.id AND e.prec IS NOT NULL AND e.seq >= e.prec) AS 'Perte',\n  ROUND(AVG(f.rssi_dbm))                                       AS 'RSSI moyen',\n  ROUND(AVG(f.snr_db), 1)                                      AS 'SNR moyen',\n  (SELECT ROUND(m.value, 2)\n     FROM measurement m JOIN frame f2 ON f2.id = m.frame_id\n    WHERE f2.node_id = n.id AND m.measurement_type = 'voltage'\n    ORDER BY f2.received_at DESC LIMIT 1)                      AS 'Batterie'\nFROM frame f\nJOIN node n ON n.id = f.node_id\nWHERE $__timeFilter(f.received_at)\nGROUP BY n.id, n.uid\nORDER BY n.uid",
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Humidité du sol",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Valeur brute d'ADC, par sonde",
+      "description": "Ce qui est réellement stocké. La valeur DESCEND quand l'humidité monte. Aucune calibration n'est appliquée ici : c'est la donnée de référence, celle qui restera juste même si la calibration change.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": false,
+            "pointSize": 4
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  COALESCE(sensor_uid, CONCAT(node_uid, '/', channel)) AS metric,\n  AVG(value)                                           AS 'ADC brut'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Humidité calibrée, par sonde",
+      "description": "Calculée à la lecture à partir du brut, sonde par sonde. Reste vide tant qu'aucune calibration n'est déclarée — c'est le travail de l'objectif O3.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 9
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": false,
+            "pointSize": 4
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  sensor_uid       AS metric,\n  AVG(moisture_pct) AS 'Humidite'\nFROM v_soil_moisture\nWHERE $__timeFilter(received_at)\n  AND moisture_pct IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "Diagnostic",
+      "gridPos": {
+        "x": 0,
+        "y": 17,
+        "w": 24,
+        "h": 1
+      },
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "type": "timeseries",
+      "title": "Écart entre sondes de même profondeur",
+      "description": "La question de l'objectif O3 : deux sondes du même lot, à la même profondeur, devraient lire pareil. L'écart qui subsiste est leur dispersion propre, pas une différence de sol. Comparer les profondeurs entre elles n'aurait pas de sens, d'où la séparation.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": false,
+            "pointSize": 4
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  CONCAT(depth_cm, ' cm') AS metric,\n  MAX(value) - MIN(value) AS 'Ecart max-min'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\n  AND sensor_uid IS NOT NULL\n  AND depth_cm IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Qualité du lien radio",
+      "description": "Produite par la passerelle, pas par le nœud. Le SNR est plus informatif que le RSSI : LoRa décode sous le plancher de bruit, et un SNR qui s'effondre annonce la perte de lien bien avant que le RSSI ne semble mauvais.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 18,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": false,
+            "pointSize": 4
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "dBm"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*SNR.*"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "unit",
+                "value": "dB"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "SNR (dB)"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(f.received_at, $__interval),\n  n.uid            AS metric,\n  AVG(f.rssi_dbm)  AS 'RSSI'\nFROM frame f JOIN node n ON n.id = f.node_id\nWHERE $__timeFilter(f.received_at)\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(f.received_at, $__interval),\n  CONCAT(n.uid, ' SNR') AS metric,\n  AVG(f.snr_db)         AS 'SNR'\nFROM frame f JOIN node n ON n.id = f.node_id\nWHERE $__timeFilter(f.received_at)\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tension d'alimentation",
+      "description": "Sur powerbank USB pendant le POC, donc peu informative. Elle le deviendra à l'objectif O6, quand le nœud passera sur batterie.",
+      "datasource": {
+        "type": "mysql",
+        "uid": "jardin"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 26,
+        "w": 24,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 6,
+            "showPoints": "never",
+            "spanNulls": false,
+            "pointSize": 4
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "volt",
+          "decimals": 2
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "mysql",
+            "uid": "jardin"
+          },
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  node_uid   AS metric,\n  AVG(value) AS 'Tension'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'voltage'\nGROUP BY 1, 2\nORDER BY 1",
+          "editorMode": "code"
+        }
+      ]
+    }
+  ]
+}
