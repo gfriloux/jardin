@@ -1,0 +1,34 @@
+# croquis   : 07-trois-sondes
+# etiquette : trois-sondes-meme-pot
+# date      : 2026-08-15T21:14:22+02:00
+
+--- Terminal on /dev/ttyUSB0 | 115200 8-N-1
+--- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+
+=== 07-trois-sondes ===
+3 sondes en direct sur GPIO 7 2 4
+Les trois dans le meme pot, meme profondeur.
+L'ecart entre S1, S2 et S3 est le resultat cherche.
+
+S1 (GPIO  7)  moy=  875.8  ecart-type=  2.0  min= 868  max= 885
+S2 (GPIO  2)  moy=  879.4  ecart-type=  8.5  min= 807  max= 905
+S3 (GPIO  4)  moy=  871.3  ecart-type=  7.9  min= 845  max= 923
+divergence = 8.0 points, soit 0.5 % de la dynamique utile
+
+S1 (GPIO  7)  moy=  875.1  ecart-type= 10.0  min= 811  max= 915
+S2 (GPIO  2)  moy=  879.4  ecart-type=  2.2  min= 873  max= 887
+S3 (GPIO  4)  moy=  872.3  ecart-type=  2.0  min= 868  max= 885
+divergence = 7.1 points, soit 0.5 % de la dynamique utile
+
+S1 (GPIO  7)  moy=  875.9  ecart-type=  3.5  min= 869  max= 901
+S2 (GPIO  2)  moy=  879.3  ecart-type=  2.3  min= 875  max= 891
+S3 (GPIO  4)  moy=  871.7  ecart-type=  3.6  min= 843  max= 883
+divergence = 7.6 points, soit 0.5 % de la dynamique utile
+
+S1 (GPIO  7)  moy=  874.9  ecart-type=  1.7  min= 869  max= 879
+S2 (GPIO  2)  moy=  879.4  ecart-type=  6.3  min= 867  max= 907
+S3 (GPIO  4)  moy=  871.5  ecart-type=  2.0  min= 861  max= 879
+divergence = 7.9 points, soit 0.5 % de la dynamique utile
+

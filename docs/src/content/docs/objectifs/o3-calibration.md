@@ -8,8 +8,13 @@ sidebar:
 **La question.** Que vaut réellement un nombre d'ADC, et de combien deux sondes
 censées être identiques divergent-elles ?
 
-**Critère de sortie.** Une courbe de référence par sonde, et un chiffre : l'écart
-maximal entre les trois sondes placées dans des conditions identiques.
+**Critère de sortie.** Un chiffre : l'écart maximal entre les trois sondes
+placées dans des conditions identiques, et la réponse à la question qui en
+découle — les sondes sont-elles interchangeables, oui ou non ?
+
+Le critère demandait initialement « une courbe de référence par sonde ».
+[L'ADR-015](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité)
+l'a retiré : le système détecte un seuil, il ne mesure pas une humidité.
 
 **Dépend de.** [O1](/objectifs/o1-une-sonde/) · **Débloque.**
 [O5](/objectifs/o5-chaine-de-donnees/), et fournit à
@@ -116,7 +121,7 @@ la même fenêtre, sur une seule mise sous tension.
 Les trois sondes, **dans le même pot de terre**, à la même profondeur, lues par
 le même nœud.
 
-Si on obtient :
+Le scénario qu'on redoutait :
 
 ```text
 S1 = 1832
@@ -124,14 +129,27 @@ S2 = 1517
 S3 = 1798
 ```
 
-alors on vient de découvrir, sur une table, un problème qui aurait été
-indétectable une fois les sondes enterrées à cinq mètres les unes des autres :
-`S2` n'est pas mal placée, elle est **différente**. Sans cette expérience, on
-aurait conclu que le sol est plus humide à cet endroit.
+`S2` ne serait pas mal placée, elle serait **différente** — et une fois les
+sondes enterrées à cinq mètres les unes des autres, on aurait conclu que le sol
+est plus humide à cet endroit. C'est le genre de piège qu'un POC existe pour
+découvrir sur une table.
 
-C'est exactement le genre d'information qu'un POC doit produire.
+**Ce n'est pas ce qui s'est produit.** L'écart mesuré est de 7,8 points, pas de
+315 — voir les [résultats](#15-août-2026--les-sondes-sont-interchangeables). Le
+piège existait, il était réel, et il s'est refermé sur du vide.
 
 ## Les points de calibration
+
+:::note[Largement réduit par l'ADR-015]
+Cette section décrivait une calibration en trois points par sonde. Depuis que le
+système
+[détecte un seuil plutôt qu'il ne mesure une humidité](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité),
+il n'y a plus de courbe à construire.
+
+Ce qui reste utile ici, ce sont les **repères agronomiques** ci-dessous : c'est
+d'eux que sortira le seuil d'arrosage, et ils s'établiront en
+[O8](/objectifs/o8-exploitation/) en regardant sécher le sol réel.
+:::
 
 Trois états de sol, dans le même pot, avec le temps de laisser l'eau se
 répartir entre chaque :
@@ -156,8 +174,8 @@ Deux repères plus rigoureux, si on veut aller au-delà du relatif :
   extraire l'eau ;
 - **la capacité au champ**, l'état d'un sol ressuyé après saturation.
 
-Pour des fraisiers, l'échelle relative entre ces deux repères est probablement
-largement suffisante — c'est la question ouverte du
+Pour des fraisiers, l'échelle relative entre ces deux repères est
+suffisante — et c'est même tout ce dont on a besoin — c'est la question ouverte du
 [contexte](/projet/contexte/#la-question-ouverte-de-fond), et cet objectif est
 le moment de la trancher avec des chiffres.
 
@@ -185,12 +203,69 @@ Voir [ADR-002](/decisions/#adr-002--on-stocke-la-valeur-adc-brute).
 
 ## Questions ouvertes
 
-- Quel est l'écart maximal entre les trois sondes en conditions identiques ?
-- Cet écart est-il un simple décalage constant, ou un facteur d'échelle ?
-- La réponse est-elle assez linéaire pour une interpolation à deux points ?
+- ~~Quel est l'écart maximal entre les trois sondes en conditions identiques ?~~
+  **7,8 points au plus**, et probablement moins.
+- ~~Cet écart est-il un simple décalage constant, ou un facteur d'échelle ?~~ Ni
+  l'un ni l'autre : le classement des sondes s'inverse selon le milieu.
+- ~~La réponse est-elle assez linéaire pour une interpolation à deux points ?~~
+  Sans objet depuis
+  [l'ADR-015](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité).
 - L'effet de la température est-il visible sur une journée d'août ?
 - Faut-il commander un second lot de sondes ?
 
 ## Résultats
 
-*À remplir.*
+### 15 août 2026 — les sondes sont interchangeables
+
+`07-trois-sondes`, trois sondes lues dans la même fenêtre de temps, deux milieux
+successifs :
+
+| | Même pot | Verre d'eau |
+|---|---:|---:|
+| S1 (GPIO 7) | 2180,9 | 875,4 |
+| S2 (GPIO 2) | 2173,4 | 879,4 |
+| S3 (GPIO 4) | 2173,1 | 871,7 |
+| **Divergence max** | **7,8 pts** | **7,7 pts** |
+| Classement | S1 > S2 > S3 | **S2 > S1 > S3** |
+
+**7,8 points d'écart maximal**, soit 0,5 % de la dynamique utile et un
+cinquième de l'incertitude entre séances. Les trois sondes sont
+interchangeables : les traiter individuellement reviendrait à corriger un écart
+plus petit que le bruit de la procédure de correction.
+
+**Et cet écart n'est même pas attribuable aux sondes.** Le classement change
+entre les deux milieux — S1 et S2 permutent. Un décalage de canal ADC serait
+constant, un défaut de sonde aussi. Ni l'un ni l'autre ne peut expliquer une
+inversion.
+
+7,8 points est donc une **borne supérieure**, pas une mesure. La divergence
+réelle est en dessous, noyée sous l'erreur de placement.
+
+### Pourquoi on ne cherchera pas plus loin
+
+Deux milieux ont été essayés, aucun ne permet de faire mieux :
+
+- **Le pot** n'est pas homogène à l'échelle du centimètre — porosité, tassement,
+  cheminements de l'eau. La mesure y additionne divergence des sondes et
+  hétérogénéité du sol, sans moyen de les séparer.
+- **Le verre d'eau** est homogène, mais impose une profondeur d'immersion. Or
+  la profondeur est le paramètre dominant : **314 points séparent un petit verre
+  d'un verre plein**, soit de l'ordre de dix points par millimètre de lame. Les
+  7,8 points mesurés représentent donc moins d'un millimètre d'écart entre trois
+  sondes tenues à la main — et elles glissent.
+
+L'air libre lèverait les deux objections, étant homogène et sans profondeur.
+Mais [l'ADR-015](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité)
+rend la mesure sans objet : 8 points sur 1481 ne changent aucune décision
+d'arrosage. La borne supérieure suffit.
+
+### Ce que la sensibilité à la profondeur implique quand même
+
+Dix points par millimètre, c'est **une centaine de points par centimètre** — 7 %
+de la plage utile. Sans effet sur un seuil grossier, mais assez pour rendre
+trompeuse toute comparaison fine entre deux sondes posées à des profondeurs
+différentes.
+
+À garder en tête au moment d'interpréter les écarts entre zones en
+[O8](/objectifs/o8-exploitation/) : une sonde qui lit plus sec qu'une autre est
+peut-être simplement moins enfoncée.

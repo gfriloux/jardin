@@ -430,3 +430,106 @@ lorsqu'il y en a plusieurs, instrumentées différemment — soit O7 au plus tô
 
 **Ce qui la changerait.** Le moment où les zones auront un sens : assez de
 sondes, réparties sur plusieurs zones, avec des comportements différents.
+
+---
+
+## ADR-015 — On détecte un seuil, on ne mesure pas une humidité
+
+**Statut :** ✅ actée · 15 août 2026
+
+**Contexte.** La caractérisation de [O1](/objectifs/o1-une-sonde/) a produit des
+chiffres flatteurs : 1481 points de dynamique entre terre sèche et terre
+saturée, 3 points de bruit instantané, des sondes qui divergent de moins de 8
+points. La tentation qui vient avec est de raffiner — étalonner chaque sonde,
+contrôler le décalage des canaux d'ADC, imposer une profondeur de pose au
+millimètre.
+
+Cette tentation confond la qualité de l'instrument avec le besoin.
+
+**Décision.** Le système répond à une question binaire : **faut-il arroser ?**
+Il ne prétend pas mesurer un taux d'humidité, ni maintenant ni plus tard.
+
+**Pourquoi.** Personne ne consultera un pourcentage. Ce qu'on veut savoir, c'est
+si la terre est devenue sèche au point qu'il faille intervenir — une décision à
+deux issues, dont le seuil se découvrira en regardant sécher le sol réel, pas en
+raffinant l'électronique sur une table.
+
+**Conséquences.**
+
+- **Ce que ça retire du travail.** L'étalonnage par sonde n'a pas lieu d'être :
+  8 points de divergence sur 1481 sont sans effet sur un seuil. Le décalage des
+  canaux d'ADC1 ne sera pas mesuré. Le gabarit de profondeur envisagé pour la
+  pose devient superflu — un centimètre d'écart vaut une centaine de points,
+  soit 7 % de la plage, invisible pour une décision grossière.
+- **Ce que ça promeut.** La **fiabilité dans la durée** passe devant la
+  justesse : une sonde qui dérive de 5 % par an est un problème, une sonde qui
+  lit 8 points à côté n'en est pas un.
+- **Le risque dominant devient la
+  [sonde déchaussée](/materiel/risques/#une-sonde-déchaussée-est-indétectable)**,
+  qui lit comme une terre sèche et déclencherait donc un arrosage permanent.
+  C'est le seul écart qui trompe la décision au lieu de la nuancer.
+- Le seuil lui-même est un résultat de [O8](/objectifs/o8-exploitation/),
+  obtenu en observant des courbes d'assèchement réelles sur plusieurs semaines.
+  Il n'est pas dérivable des mesures de table.
+- L'[ADR-002](#adr-002--on-stocke-la-valeur-adc-brute) s'en trouve renforcée :
+  puisque le seuil est empirique et révisable, stocker le brut permet de le
+  changer d'avis sans perdre l'historique.
+
+**Ce qui la changerait.** Un usage qui demanderait une grandeur physique
+comparable entre jardins ou publiable — pilotage agronomique fin, comparaison
+avec des données externes. Rien de tel n'est au programme.
+
+---
+
+## ADR-016 — Le seuil d'arrosage est un réglage par zone, pas une constante
+
+**Statut :** ✅ actée · 15 août 2026
+
+**Contexte.** [L'ADR-015](#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité)
+pose que le système détecte un seuil. Restait à savoir d'où sort ce seuil, et
+comment il encaisse tout ce qui fait qu'une valeur brute n'est pas comparable
+d'un point à l'autre du jardin :
+
+- la divergence entre sondes — mesurée à moins de 8 points en
+  [O3](/objectifs/o3-calibration/), donc négligeable ;
+- la profondeur de pose, qui vaut de l'ordre de cent points par centimètre ;
+- le type de sol, qui change d'une planche à l'autre ;
+- et surtout **les besoins de la plante**, qui n'ont aucune raison d'être les
+  mêmes pour des fraisiers et pour un pied qui veut la terre humide.
+
+**Décision.** Le seuil de déclenchement est une **propriété de la zone**,
+pré-remplie par une valeur par défaut et modifiable à l'usage. Une surcharge par
+sonde reste possible, pour absorber une profondeur de pose atypique.
+
+**Pourquoi.** Le seuil se règle contre la seule référence qui compte : **l'état
+de la plante**. Si les fraisiers souffrent alors que la sonde annonce 2400, on
+descend le seuil de cette zone et on n'a plus jamais à se demander pourquoi.
+
+Ce faisant, **tous les termes d'erreur disparaissent d'un coup** — divergence,
+profondeur, type de sol, modèle de sonde. Ils sont absorbés par le réglage, sans
+jamais avoir besoin d'être mesurés séparément. C'est ce qui rend inutile la
+calibration par sonde que O3 envisageait.
+
+**Conséquences.**
+
+- Les seuils vivent en base, à côté des zones, et s'appliquent **à la lecture**
+  comme la calibration de
+  [l'ADR-002](#adr-002--on-stocke-la-valeur-adc-brute). Les changer ne réécrit
+  rien : l'historique reste brut, et se relit avec le seuil du jour.
+- L'appartenance d'une sonde à une zone est déjà **déclarée et datée** dans le
+  [modèle de données](/projet/modele-de-donnees/#les-zones). Le seuil suit la
+  même logique : une valeur, une date d'entrée en vigueur.
+- **Deux seuils, pas un.** Un seuil unique fait battre la commande : le sol
+  repasse au-dessus dès l'arrosage, puis redescend. Il faut un seuil de
+  déclenchement et un seuil d'arrêt plus haut, ou un délai minimal entre deux
+  arrosages. La mesure de O1 le confirme — la sonde **descend deux à trois fois
+  plus vite qu'elle ne remonte**, donc le retour au sec est lent et l'humidité
+  après arrosage est trompeuse.
+- La granularité est la **zone**, pas la sonde. Avec 8 points de divergence pour
+  1481 de dynamique, un réglage par sonde serait un bouton de plus à entretenir
+  pour un effet non mesurable. La surcharge par sonde existe pour la profondeur,
+  pas pour la sonde elle-même.
+
+**Ce qui la changerait.** Rien de prévisible. Si un jour un seuil unique
+suffisait à tout le jardin, le réglage par zone resterait compatible — il
+serait simplement partout identique.

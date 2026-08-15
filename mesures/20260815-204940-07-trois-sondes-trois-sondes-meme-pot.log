@@ -1,0 +1,26 @@
+# croquis   : 07-trois-sondes
+# etiquette : trois-sondes-meme-pot
+# date      : 2026-08-15T20:49:49+02:00
+
+--- Terminal on /dev/ttyUSB0 | 115200 8-N-1
+--- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+
+=== 07-trois-sondes ===
+3 sondes en direct sur GPIO 7 2 4
+Les trois dans le meme pot, meme profondeur.
+L'ecart entre S1, S2 et S3 est le resultat cherche.
+
+S1 (GPIO  7)  moy= 2182.4  ecart-type=  6.7  min=2155  max=2205
+S2 (GPIO  2)  moy= 2173.8  ecart-type=  3.0  min=2169  max=2191
+S3 (GPIO  4)  moy= 2173.4  ecart-type=  2.3  min=2168  max=2186
+divergence = 9.0 points, soit 0.6 % de la dynamique utile
+
+S1 (GPIO  7)  moy= 2181.2  ecart-type=  5.1  min=2160  max=2189
+S2 (GPIO  2)  moy= 2173.4  ecart-type=  3.3  min=2168  max=2200
+S3 (GPIO  4)  moy= 2175.4  ecart-type= 18.9  min=2077  max=2249
+divergence = 7.8 points, soit 0.5 % de la dynamique utile
+
+S1 (GPIO  7)  moy= 2181.3  ecart-type=  5.4  min=2159  max=2191
+S2 (GPIO  2)  moy= 2172.3  ecart-type= 16.2  min=2104  max=2217
