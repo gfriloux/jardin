@@ -7,7 +7,7 @@
 // cyclique EU868, antenne obligatoire), et c'est le sujet de l'objectif O4. Ici
 // on veut seulement savoir si la puce répond.
 //
-// DANGER : l'antenne doit être vissée avant toute mise sous tension. Un SX1262
+// DANGER : l'antenne doit être clipsée avant toute mise sous tension. Un SX1262
 // qui émet sans antenne se détruit. Même si ce croquis n'émet pas, prends
 // l'habitude — c'est 25 euros la carte.
 
