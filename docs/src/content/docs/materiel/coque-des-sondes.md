@@ -150,6 +150,21 @@ pose pas à plat et la coquille refuse de fermer. Les autres cotes tolèrent
 l'approximation ; celle-ci non.
 :::
 
+:::danger[La valeur actuelle est probablement fausse de 13 mm]
+Mesurée sur la photo `o1-05` en prenant la pièce de 2 € comme étalon, l'encoche
+se situe à **19–21 mm** du bord haut du PCB. Le modèle utilise 34 mm.
+
+Cette estimation vaut ce que vaut une photogrammétrie sur photo de téléphone :
+la sonde y mesure 111 mm à l'échelle de la pièce alors que ces modules en font
+98, soit 13 % d'erreur de perspective, corrigée ici mais pas éliminée. Ce qui
+survit à l'incertitude, c'est l'**ordre de grandeur de l'écart** : une douzaine
+de millimètres, pas une fraction.
+
+**Ne pas lancer d'impression avant le relevé au pied à coulisse** — photo
+`o1-10` de la [liste des photos](/materiel/photos/#o1--une-sonde-une-valeur).
+C'est le seul chemin critique encore ouvert du projet.
+:::
+
 **Une question à trancher en même temps.** Ces encoches marquent souvent la
 **profondeur d'enfoncement maximale conseillée** de la sonde dans le sol. Si
 c'est le cas ici, la coque doit s'arrêter pile à ce niveau — il faudrait alors
