@@ -46,6 +46,20 @@ RadioLib. Si l'écran s'allume et que la radio répond, le brochage est le bon.
 [O1](/objectifs/o1-une-sonde/). Si le brochage diffère, on le documente ici et
 on le centralise dans un seul en-tête du firmware.
 
+:::tip[Risque levé — 15 août 2026]
+Les quatre croquis de validation passent sur la carte réelle : `01-blink` pour
+la LED (35), `02-oled` pour `Vext` (36) et l'écran (17, 18, 21), `03-radio` pour
+les sept broches SPI de la SX1262 (8 à 14), `04-sonde` pour l'entrée analogique
+(7).
+
+**Le clone Heemol suit le brochage Heltec V3 sans un seul écart.**
+`firmware/include/board.h` n'a demandé aucune correction.
+
+Reste vraie, en revanche, la seconde moitié du risque : la Heltec V3 est
+toujours marquée « *Not actively maintained* » côté PlatformIO. C'est ce que la
+version épinglée dans `platformio.ini` protège.
+:::
+
 ## La powerbank va se couper en deep sleep
 
 **Le risque.** La INIU 10 000 mAh, comme la quasi-totalité des powerbanks
@@ -152,9 +166,45 @@ graphe de la [feuille de route](/projet/feuille-de-route/#le-graphe).
 dans l'étage de sortie. C'est le moyen le plus rapide de détruire une carte
 LoRa neuve.
 
-**Ce qu'on fait.** Règle absolue : **antenne vissée avant la première mise sous
+**Ce qu'on fait.** Règle absolue : **antenne montée avant la première mise sous
 tension**, sur les deux cartes, y compris pour un simple test d'OLED. Le coût
 d'appliquer cette règle est nul, celui de l'oublier est de 25 €.
+
+Côté carte, le connecteur est une prise u.FL qui se **clipse** — il n'y a pas de
+filetage. Le pas de vis se trouve à l'autre extrémité de la queue de cochon.
+
+Le firmware d'usine de nos cartes affiche `LORA MODE 0` dès le démarrage : la
+radio est donc initialisée avant toute intervention. La règle n'est pas
+théorique, le risque existe au tout premier branchement.
+
+## Une sonde déchaussée est indétectable
+
+**Le risque.** Mesuré en O1 le 15 août 2026 : la terre sèche lit 2680,3 et l'air
+libre 2683,9. **3,6 points d'écart**, contre 37 points de reproductibilité entre
+deux séances. Les deux états sont électriquement indiscernables.
+
+Une sonde qui sort du sol — gel, animal, coup de bêche, affaissement du terrain
+après un arrosage — produit donc une lecture parfaitement crédible de « sol très
+sec ». Rien dans la valeur ne trahit l'anomalie.
+
+Sur une chaîne qui déclenche un arrosage en
+[O9](/objectifs/o9-irrigation/), ce scénario mène à arroser en continu, sur un
+sol qui n'en a pas besoin, jusqu'à ce que quelqu'un s'en aperçoive.
+
+**Ce qu'on fait.** Rien pour l'instant : le risque est identifié, pas traité.
+Les pistes, par ordre de simplicité :
+
+- **Un plafond de durée d'arrosage**, qui borne les dégâts quelle que soit la
+  cause. C'est le garde-fou le moins cher et le plus robuste, à poser dès que
+  O9 existera.
+- **Un seuil de vraisemblance sur la vitesse de variation.** Une sonde
+  déchaussée passe à « sec » en quelques minutes ; un sol met des jours. Une
+  chute trop rapide est un signal d'anomalie, pas de sécheresse.
+- **Une seconde grandeur corrélée**, typiquement la température du sol, dont le
+  comportement change franchement à l'air libre.
+
+Aucune ne se décide avant d'avoir vu le comportement réel sur le terrain en
+[O7](/objectifs/o7-mise-au-jardin/).
 
 ## Le rapport cyclique EU868
 

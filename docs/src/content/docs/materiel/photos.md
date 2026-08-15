@@ -41,6 +41,16 @@ Le numéro suit l'ordre des étapes de l'objectif, pas l'ordre de prise de vue.
 Trois `../` depuis `src/content/docs/<section>/` : deux ne suffisent pas et
 Astro échoue au build avec `image-not-found`.
 
+:::caution[Renommer une photo demande de relancer `just dev`]
+Astro tient un cache des images dans `docs/.astro/content-assets.mjs`. Il ne
+suit pas les renommages : le serveur de développement continue de chercher
+l'ancien nom et affiche `ImageNotFound`, alors que le fichier existe sous son
+nouveau nom et que `just build` passe.
+
+Coupe le serveur et relance-le. Si l'erreur résiste, `just clean` vide le cache
+et `dist/`.
+:::
+
 Le texte alternatif n'est pas décoratif : il décrit ce qu'on doit voir. C'est ce
 qui reste quand l'image ne charge pas, et c'est ce que lisent les moteurs de
 recherche.
@@ -66,11 +76,11 @@ nouveau capteur.
 
 | # | Photo | Pourquoi |
 |---|---|---|
-| `o1-01` | La carte sortie du sachet, à plat, **antenne non montée** | Montrer à quoi ressemble le connecteur d'antenne nu |
-| `o1-02` | Gros plan sur le connecteur d'antenne, antenne vissée | La consigne de sécurité la plus importante du projet mérite une image |
-| `o1-03` | La carte branchée en USB, LED allumée | L'état « ça vit » |
-| `o1-04` | L'écran affichant `JARDIN / O1 - ecran OK`, **de face** | La preuve que le brochage du clone est bon |
-| `o1-05` | La sonde entière, avec une pièce de 2 € à côté | L'échelle réelle, et le trait de graduation |
+| `o1-01` ✅ | La carte sortie du sachet, à plat, **antenne non montée** | Montrer à quoi ressemble le connecteur d'antenne nu |
+| `o1-02` ✅ | Gros plan sur le connecteur u.FL, antenne clipsée | La consigne de sécurité la plus importante du projet mérite une image |
+| `o1-03` ✅ | La carte branchée en USB, écran d'usine allumé (`LORA MODE 0`) | L'état « ça vit ». Sur nos cartes la LED reste éteinte au démarrage : c'est l'écran qui fait foi |
+| `o1-04` ✅ | L'écran affichant `JARDIN / O1 - ecran OK`, **de face** | La preuve que le brochage du clone est bon |
+| `o1-05` ✅ | La sonde entière, avec une pièce de 2 € à côté | L'échelle réelle, et le trait de graduation |
 | `o1-06` | Gros plan sur le trait de graduation | La limite d'immersion, qu'on répète partout |
 | `o1-07` | Le câblage complet vu du dessus : sonde → breadboard → carte | À comparer avec le schéma dessiné |
 | `o1-08` | La sonde dans le verre d'eau, jusqu'au trait | L'expérience de caractérisation |

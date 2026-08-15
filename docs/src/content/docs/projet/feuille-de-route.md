@@ -68,7 +68,7 @@ Deux choses à lire dans ce graphe :
 | # | Objectif | Question à laquelle il répond | État |
 |---|---|---|---|
 | [O0](/objectifs/o0-socle/) | Socle projet | Où vit le code, comment on le construit, où on documente ? | ✅ tenu |
-| [O1](/objectifs/o1-une-sonde/) | Une sonde, une valeur | Est-ce qu'une sonde donne une valeur stable et plausible ? | ⏳ matériel attendu |
+| [O1](/objectifs/o1-une-sonde/) | Une sonde, une valeur | Est-ce qu'une sonde donne une valeur stable et plausible ? | ✅ tenu |
 | [O2](/objectifs/o2-multiplexage/) | N sondes via MUX | Est-ce qu'un nœud peut lire plusieurs sondes sans se mélanger ? | ⏸ bloqué |
 | [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | ⏸ bloqué |
 | [O4](/objectifs/o4-lien-radio/) | Le lien radio | Est-ce que LoRa porte depuis le fond du jardin ? | ⏸ bloqué |

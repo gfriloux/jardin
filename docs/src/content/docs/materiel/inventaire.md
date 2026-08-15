@@ -144,6 +144,8 @@ Repéré, non commandé, à décider quand le besoin sera confirmé par une mesu
 
 | Besoin | Pour quel objectif | Note |
 |---|---|---|
+| **Fer à souder + étain** | **O1, bloquant** | Les barrettes de la carte arrivent non soudées. Sans elles, aucun câblage tenable — voir [O1](/objectifs/o1-une-sonde/#ce-quil-te-faut-sur-la-table) |
+| Transistor de commutation (MOSFET canal N ou petit NPN) | O2 | Une sonde tire 5 mA ; seize en tirent 80, soit le double de ce qu'un GPIO fournit. Mesuré en [O1](/objectifs/o1-une-sonde/#le-délai-de-stabilisation-après-mise-sous-tension) |
 | Antenne 868 MHz correcte + câble pigtail | O4 / O7 | Les antennes fournies avec ces cartes sont médiocres |
 | Multimètre avec mesure de courant µA | O6 | Indispensable pour caractériser le deep sleep |
 | Sondes réellement étanches (type DFRobot SEN0308, IP65) | O7 | Mal distribuées en France : RS ~18 €, Farnell annonce sept. 2026 |
