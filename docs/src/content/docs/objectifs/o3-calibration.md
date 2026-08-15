@@ -11,8 +11,9 @@ censées être identiques divergent-elles ?
 **Critère de sortie.** Une courbe de référence par sonde, et un chiffre : l'écart
 maximal entre les trois sondes placées dans des conditions identiques.
 
-**Dépend de.** [O2](/objectifs/o2-multiplexage/) · **Débloque.**
-[O5](/objectifs/o5-chaine-de-donnees/)
+**Dépend de.** [O1](/objectifs/o1-une-sonde/) · **Débloque.**
+[O5](/objectifs/o5-chaine-de-donnees/), et fournit à
+[O2](/objectifs/o2-multiplexage/) ses valeurs de référence
 
 :::tip[C'est l'objectif le plus important du POC]
 Plus important que le choix de la carte, plus important que la portée radio. Un
@@ -20,18 +21,60 @@ système qui transmet parfaitement des valeurs incomparables entre elles ne sert
 à rien.
 :::
 
+## Le montage : trois sondes en direct, sans multiplexeur
+
+```text
+S1 AOUT ── GPIO 7 ┐
+S2 AOUT ── GPIO 2 ├── NODE-001     alimentation commune : GPIO 6
+S3 AOUT ── GPIO 4 ┘                (3 x 5 mA = 15 mA, sous les 40 mA du GPIO)
+```
+
+ADC1 laisse quatre broches libres une fois la mesure de batterie (GPIO 1) et
+l'alimentation des sondes (GPIO 6) câblées : 7, 2, 4 et 5. Les trois sondes du
+POC y tiennent sans multiplexeur, et GPIO 5 reste disponible pour une
+quatrième.
+
+:::tip[Pourquoi surtout pas le multiplexeur ici]
+Mesurer la divergence *à travers* le CD74HC4067 rendrait le résultat
+ininterprétable : on ne saurait plus distinguer la dispersion des **sondes** de
+celle des **canaux** du multiplexeur, qui a sa propre résistance à l'état
+passant.
+
+Le câblage direct isole ce qu'on cherche à mesurer. Et il produit exactement les
+valeurs de référence dont [O2](/objectifs/o2-multiplexage/) a besoin pour son
+critère de sortie — « identiques à celles obtenues quand chaque sonde est
+branchée seule sur l'ADC ».
+:::
+
+```console
+$ just fw-log 07-trois-sondes trois-sondes-meme-pot
+```
+
+Le croquis alimente les trois sondes ensemble, attend les 200 ms de
+stabilisation mesurées en [O1](/objectifs/o1-une-sonde/#le-délai-de-stabilisation-après-mise-sous-tension),
+puis lit les trois dans la même fenêtre de temps :
+
+```text
+S1 (GPIO  7)  moy= 1832.4  ecart-type=  3.1  min=1825  max=1841
+S2 (GPIO  2)  moy= 1517.9  ecart-type=  2.8  min=1509  max=1526
+S3 (GPIO  4)  moy= 1790.2  ecart-type=  3.4  min=1781  max=1799
+divergence = 314.5 points, soit 21.2 % de la dynamique utile
+```
+
+:::caution[Les trois lectures doivent être simultanées]
+La reproductibilité entre séances vaut environ **37 points**, soit dix fois le
+bruit instantané — c'est le résultat le plus contraignant de
+[O1](/objectifs/o1-une-sonde/#la-vraie-limite--la-reproductibilité-entre-séances).
+
+Lire les sondes à un quart d'heure d'écart laisserait la dérive de séance se
+mélanger à la divergence recherchée. C'est pour ça que le croquis les lit dans
+la même fenêtre, sur une seule mise sous tension.
+:::
+
 ## L'expérience de divergence
 
 Les trois sondes, **dans le même pot de terre**, à la même profondeur, lues par
 le même nœud.
-
-```text
-3 sondes
-
-S1 ─┐
-S2 ─┤── NODE-001
-S3 ─┘
-```
 
 Si on obtient :
 

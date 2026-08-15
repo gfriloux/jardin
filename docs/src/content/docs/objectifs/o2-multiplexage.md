@@ -1,22 +1,36 @@
 ---
-title: O2 — N sondes via multiplexeur
-description: Lire trois sondes sur un seul ADC sans les confondre.
+title: O2 — Passer à N sondes
+description: Franchir la limite des quatre entrées analogiques, sans confondre les sondes.
 sidebar:
   order: 2
 ---
 
-**La question.** Est-ce qu'un nœud peut lire plusieurs sondes sans les
+**La question.** Est-ce qu'un nœud peut lire plus de quatre sondes sans les
 confondre ni les contaminer entre elles ?
 
-**Critère de sortie.** Trois sondes lues en séquence, avec des valeurs
-identiques à celles obtenues quand chaque sonde est branchée seule sur l'ADC.
+**Critère de sortie.** Trois sondes lues en séquence à travers le multiplexeur,
+avec des valeurs identiques à celles relevées en direct pendant
+[O3](/objectifs/o3-calibration/).
 
-**Dépend de.** [O1](/objectifs/o1-une-sonde/) · **Débloque.**
-[O3](/objectifs/o3-calibration/)
+**Dépend de.** [O1](/objectifs/o1-une-sonde/), et de [O3](/objectifs/o3-calibration/)
+pour les valeurs de référence · **Débloque.** rien dans le POC
 
 **Matériel nécessaire.** Le CD74HC4067 — dont la livraison n'a pas de date
-annoncée. Cet objectif peut donc être doublé par
-[O4](/objectifs/o4-lien-radio/), qui n'en dépend pas.
+annoncée.
+
+:::note[Cet objectif ne bloque plus rien]
+Il l'a longtemps semblé, parce que O3 devait passer par lui. Ce n'est pas le
+cas : ADC1 laisse quatre broches libres une fois la batterie et l'alimentation
+des sondes câblées, donc les trois sondes du POC se lisent **en direct**.
+
+O2 sert à franchir la limite de quatre, ce dont l'allée de 15 mètres aura
+besoin — pas le POC sur la table. Le retard de livraison est un agacement, pas
+un blocage.
+
+Et l'ordre inversé rend O2 **vérifiable** : son critère de sortie exige des
+valeurs de référence prises sans multiplexeur, que O3 produira. Attendre le
+CD74HC4067 pour tout faire d'un coup aurait laissé O2 s'auto-attester.
+:::
 
 ## Le montage
 
@@ -28,8 +42,13 @@ ESP32 ─ MUX ─┼── S2
 ```
 
 Le CD74HC4067 offre seize entrées analogiques sur un seul ADC. Trois seulement
-seront utilisées, mais l'architecture ne plafonne pas à trois — c'est tout
-l'intérêt de le poser maintenant.
+serviront à la validation, mais l'architecture ne plafonne plus à quatre — c'est
+tout l'intérêt de l'objectif.
+
+**Prévoir un transistor sur l'alimentation des sondes.** Une sonde tire 5 mA :
+sept suffisent à dépasser les 40 mA qu'un GPIO fournit. Or on voudra les
+alimenter toutes ensemble, pour payer le délai de stabilisation de 200 ms une
+fois et non seize — voir [O1](/objectifs/o1-une-sonde/#le-délai-de-stabilisation-après-mise-sous-tension).
 
 Câblage : quatre broches d'adresse (`S0`–`S3`) pour choisir le canal, une broche
 `EN` (active à l'état bas), et la sortie commune `SIG` vers une broche **ADC1**.

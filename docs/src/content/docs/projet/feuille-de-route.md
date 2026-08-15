@@ -16,7 +16,7 @@ une réponse**.
 flowchart TD
     O0["<b>O0 — Socle projet</b><br/>dépôt, devshell Nix, doc"]
     O1["<b>O1 — Une sonde, une valeur</b><br/>ADC brut lisible sur la liaison série"]
-    O2["<b>O2 — N sondes via MUX</b><br/>CD74HC4067, alim à la demande"]
+    O2["<b>O2 — Passer à N sondes</b><br/>CD74HC4067, au-delà de quatre sondes"]
     O3["<b>O3 — Calibration</b><br/>sec / humide / saturé, dérive inter-sondes"]
     O4["<b>O4 — Le lien radio</b><br/>LoRa point-à-point NODE → GATEWAY"]
     O5["<b>O5 — La chaîne de données</b><br/>archive NDJSON → MariaDB → Grafana"]
@@ -27,7 +27,8 @@ flowchart TD
 
     O0 --> O1
     O1 --> O2
-    O2 --> O3
+    O1 --> O3
+    O3 -.->|référence de validation| O2
     O1 --> O4
     O4 --> O5
     O3 --> O5
@@ -53,11 +54,18 @@ flowchart TD
     end
 ```
 
-Deux choses à lire dans ce graphe :
+Trois choses à lire dans ce graphe :
 
 - **O1 débloque O4 directement.** Le lien radio n'attend pas le multiplexage ni
   la calibration : une seule sonde suffit à valider la portée. Ces deux branches
   peuvent avancer en parallèle si le matériel le permet.
+- **O3 ne dépend plus de O2**, et la flèche s'est même inversée en pointillés.
+  ADC1 laisse quatre broches libres une fois la batterie et l'alimentation des
+  sondes câblées : les trois sondes du POC tiennent en direct. Mesurer leur
+  divergence *à travers* un multiplexeur empêcherait d'ailleurs de distinguer
+  la dispersion des sondes de celle des canaux. Ces mesures directes sont au
+  contraire la **référence contre laquelle O2 se validera** — c'est
+  littéralement son critère de sortie.
 - **O5 attend O3 *et* O4.** Stocker des mesures non calibrées est possible — et
   c'est même ce qu'on fait, la calibration étant calculée à la lecture. Mais on
   veut que la première série de données archivée soit déjà attribuable et
@@ -69,9 +77,9 @@ Deux choses à lire dans ce graphe :
 |---|---|---|---|
 | [O0](/objectifs/o0-socle/) | Socle projet | Où vit le code, comment on le construit, où on documente ? | ✅ tenu |
 | [O1](/objectifs/o1-une-sonde/) | Une sonde, une valeur | Est-ce qu'une sonde donne une valeur stable et plausible ? | ✅ tenu |
-| [O2](/objectifs/o2-multiplexage/) | N sondes via MUX | Est-ce qu'un nœud peut lire plusieurs sondes sans se mélanger ? | ⏸ bloqué |
-| [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | ⏸ bloqué |
-| [O4](/objectifs/o4-lien-radio/) | Le lien radio | Est-ce que LoRa porte depuis le fond du jardin ? | ⏸ bloqué |
+| [O2](/objectifs/o2-multiplexage/) | Passer à N sondes | Est-ce qu'un nœud peut lire plus de quatre sondes sans se mélanger ? | ⏸ multiplexeur non livré |
+| [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | 🔜 prêt — trois sondes en direct |
+| [O4](/objectifs/o4-lien-radio/) | Le lien radio | Est-ce que LoRa porte depuis le fond du jardin ? | 🔜 prêt |
 | [O5](/objectifs/o5-chaine-de-donnees/) | La chaîne de données | Est-ce que l'architecture de données est agréable à exploiter ? | ⏸ bloqué |
 | [O6](/objectifs/o6-autonomie/) | Autonomie | Combien de temps le nœud tient-il, et sur quelle source ? | ⏸ bloqué |
 | [O7](/objectifs/o7-mise-au-jardin/) | Mise au jardin | Est-ce que ça survit dehors, avec 15 m de câble ? | ⏸ bloqué |
@@ -100,14 +108,17 @@ flowchart LR
     subgraph V00["V0.0 — O1"]
         A1[Heltec] --- A2[sonde 1]
     end
-    subgraph V01["V0.1 — O2"]
-        B1[Heltec] --- B2[MUX] --- B3["S1 S2 S3"]
+    subgraph V01["V0.1 — O3"]
+        B1[Heltec] --- B3["S1 S2 S3<br/>en direct sur ADC1"]
     end
     subgraph V02["V0.2 — O4/O5"]
         C1["NODE-001<br/>mesure + seq + batterie"] -->|LoRa| C2[GATEWAY-001] -->|USB| C3[collecteur] -->|NDJSON| C4[MariaDB]
     end
+    subgraph V03["V0.3 — O2"]
+        D1[Heltec] --- D2[MUX] --- D3["jusqu'à 16 sondes"]
+    end
 
-    V00 --> V01 --> V02
+    V00 --> V01 --> V02 --> V03
 ```
 
 ## Ce qui n'est pas dans le graphe

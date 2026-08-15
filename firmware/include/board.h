@@ -51,8 +51,18 @@
 // démarrage), GPIO 21 (reset de l'OLED), GPIO 43 et 44 (USB série), GPIO 39
 // à 42 (JTAG).
 //
-// Sortie analogique de la sonde d'humidité.
+// Sorties analogiques des sondes d'humidité.
+//
+// ADC1 laisse quatre broches libres après la mesure de batterie (1) et
+// l'alimentation des sondes (6) : 7, 2, 4 et 5. Les trois sondes du POC tiennent
+// donc en direct, sans multiplexeur — ce qui est nécessaire pour O3, dont
+// l'expérience de divergence serait faussée par les canaux du CD74HC4067. Le
+// multiplexeur reste indispensable au-delà de quatre sondes, c'est le sujet
+// de O2.
 #define PIN_SOIL_SIG 7
+#define PIN_SOIL_SIG_2 2
+#define PIN_SOIL_SIG_3 4
+// GPIO 5 reste libre pour une quatrième sonde en direct.
 
 // Alimentation de la sonde, pilotée par un GPIO pour ne l'allumer que pendant
 // la mesure (croquis 06). Une sonde capacitive tire ~5 mA, très en dessous des
