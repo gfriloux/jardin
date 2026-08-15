@@ -21,6 +21,26 @@ la documentation.
 redimensionne automatiquement à la compilation ; inutile de les compresser
 avant.
 
+**En quel format.** **JPEG pour les photos, PNG pour les captures d'écran et les
+rendus.** Ce n'est pas une préférence esthétique : un PNG stocke chaque pixel
+sans perte, ce qui convient au trait net et aux aplats d'une capture, mais coûte
+six à dix fois plus cher sur le bruit de capteur d'un appareil photo. La `o1-05`
+est passée de 3,8 Mo à 584 Ko sans différence visible, sérigraphie du capteur
+comprise.
+
+Git conserve chaque version d'un fichier binaire pour toujours : un PNG déposé
+par erreur reste dans l'historique même après correction. Sur la trentaine de
+photos que prévoit cette page, l'écart se compte en centaines de mégaoctets.
+
+Si ton appareil sort du PNG ou du HEIC, `imagemagick` est dans le devshell :
+
+```console
+$ magick photo.png -quality 90 -strip o1-05-sonde-echelle.jpg
+```
+
+`-strip` retire les métadonnées EXIF, qui contiennent la date, le modèle
+d'appareil et parfois les coordonnées GPS du lieu de prise de vue.
+
 **Comment les nommer.** `<objectif>-<numéro>-<sujet>.jpg`, en minuscules et
 sans accent :
 

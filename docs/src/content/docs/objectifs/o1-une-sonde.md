@@ -382,7 +382,7 @@ petite carte de la sonde sont fiables :
 | `GND` (ou `-`) | broche **GND** de la carte | masse |
 | `AOUT` (ou `A0`, `SIG`) | **GPIO 7** | la mesure |
 
-![La sonde entière posée à plat à côté d'une pièce de 2 €, qui donne l'échelle. Sérigraphie « Capacitive Soil Moisture Sensor v1.2 » sur la lame, connecteur JST à trois broches en haut, et les pastilles marquées GND, VCC, AOUT de gauche à droite](../../../assets/photos/o1-05-sonde-echelle.png)
+![La sonde entière posée à plat à côté d'une pièce de 2 €, qui donne l'échelle. Sérigraphie « Capacitive Soil Moisture Sensor v1.2 » sur la lame, connecteur JST à trois broches en haut, et les pastilles marquées GND, VCC, AOUT de gauche à droite](../../../assets/photos/o1-05-sonde-echelle.jpg)
 
 Sur nos sondes, la sérigraphie du connecteur donne l'ordre des broches, de
 gauche à droite : **`GND`, `VCC`, `AOUT`**. Vérifie-le sur la tienne plutôt que

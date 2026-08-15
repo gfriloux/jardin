@@ -35,6 +35,11 @@
             # apparaître sur un port série — voir O1, étape 1.
             usbutils
 
+            # docs/ — conversion des photos d'atelier en JPEG avant dépôt.
+            # Un PNG de photo pèse dix fois son équivalent JPEG, et git garde
+            # chaque version pour toujours.
+            imagemagick
+
             # collector/ — daemon Rust GATEWAY → MQTT
             cargo
             rustc
