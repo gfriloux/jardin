@@ -28,5 +28,10 @@ stack/data/*
 .DS_Store
 *.log
 
+# ... sauf les journaux de mesure de `just fw-log` : ce sont des données
+# expérimentales, pas des traces jetables. On ne les rejouera jamais dans les
+# mêmes conditions.
+!mesures/*.log
+
 # Secrets de la stack
 stack/.env

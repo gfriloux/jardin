@@ -54,8 +54,18 @@ fw-list:
 
 # Liste les cartes détectées sur les ports USB.
 fw-ports:
-    @ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || echo "aucun port série USB"
-    @pio device list
+    #!/usr/bin/env bash
+    set -uo pipefail
+    # `ls` sort en erreur dès qu'un de ses motifs ne correspond à rien, même
+    # s'il a listé les autres. Tester son code de retour annoncerait « aucun
+    # port » alors qu'une carte est là : c'est la sortie qu'on regarde.
+    ports=$(ls /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true)
+    if [ -z "$ports" ]; then
+      echo "aucun port série USB"
+    else
+      echo "$ports"
+    fi
+    pio device list
 
 # Compile, téléverse et ouvre le moniteur série (ex : just fw 01-blink).
 fw croquis:
@@ -70,6 +80,19 @@ fw croquis:
 # Compile un croquis sans le téléverser (ex : just fw-build 03-radio).
 fw-build croquis:
     cd firmware && pio run -e {{ croquis }}
+
+# Enregistre une session de mesure dans mesures/ (ex : just fw-log 05-caracterisation air-libre).
+fw-log croquis etiquette="sans-etiquette":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Une mesure qu'on ne peut pas relire est une mesure perdue : le moniteur
+    # défile et le terminal tronque. Le fichier permet d'y revenir, de comparer
+    # deux sessions, et de passer le tout à tools/analyse-mesures.py.
+    port=$(just _fw-port)
+    mkdir -p mesures
+    fichier="mesures/$(date +%Y%m%d-%H%M%S)-{{ croquis }}-{{ etiquette }}.log"
+    echo "enregistrement dans $fichier — Ctrl-C pour arrêter"
+    cd firmware && pio device monitor -e {{ croquis }} --port "$port" | tee "../$fichier"
 
 # Ouvre le moniteur série sans recompiler (ex : just fw-monitor 04-sonde).
 fw-monitor croquis:

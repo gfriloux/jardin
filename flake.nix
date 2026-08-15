@@ -31,6 +31,10 @@
             esptool
             picocom
 
+            # `lsusb`, pour diagnostiquer une carte qui s'allume sans jamais
+            # apparaître sur un port série — voir O1, étape 1.
+            usbutils
+
             # collector/ — daemon Rust GATEWAY → MQTT
             cargo
             rustc
