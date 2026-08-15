@@ -1,0 +1,120 @@
+--- Terminal on /dev/ttyUSB0 | 115200 8-N-1
+--- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+--- alimentation ON ---
+t=    72 us  raw=2685
+t= 20036 us  raw=2693
+t= 40037 us  raw=2695
+t= 60036 us  raw=2695
+t= 80037 us  raw=2697
+t=100036 us  raw=2695
+t=120037 us  raw=2696
+t=140036 us  raw=2696
+t=160037 us  raw=2695
+t=180036 us  raw=2683
+t=200037 us  raw=2687
+t=220036 us  raw=2693
+t=240037 us  raw=2693
+t=260036 us  raw=2687
+t=280037 us  raw=2693
+t=300036 us  raw=2687
+t=320037 us  raw=2693
+t=340036 us  raw=2697
+t=360037 us  raw=2687
+t=380036 us  raw=2688
+t=400037 us  raw=2695
+t=420036 us  raw=2695
+t=440037 us  raw=2695
+t=460036 us  raw=2696
+t=480037 us  raw=2687
+t=500036 us  raw=2695
+--- alimentation OFF ---
+
+--- alimentation ON ---
+t=    74 us  raw=2697
+t= 20035 us  raw=2688
+t= 40036 us  raw=2695
+t= 60035 us  raw=2696
+t= 80036 us  raw=2681
+t=100035 us  raw=2685
+t=120036 us  raw=2695
+t=140035 us  raw=2683
+t=160036 us  raw=2695
+t=180035 us  raw=2697
+t=200036 us  raw=2693
+t=220035 us  raw=2693
+t=240036 us  raw=2695
+t=260035 us  raw=2687
+t=280036 us  raw=2695
+t=300035 us  raw=2687
+t=320036 us  raw=2687
+t=340035 us  raw=2687
+t=360036 us  raw=2681
+t=380035 us  raw=2695
+t=400036 us  raw=2696
+t=420035 us  raw=2687
+t=440036 us  raw=2687
+t=460035 us  raw=2693
+t=480036 us  raw=2695
+t=500035 us  raw=2687
+--- alimentation OFF ---
+
+--- alimentation ON ---
+t=    72 us  raw=2695
+t= 20036 us  raw=2695
+t= 40037 us  raw=2701
+t= 60036 us  raw=2687
+t= 80037 us  raw=2697
+t=100036 us  raw=2699
+t=120037 us  raw=2697
+t=140036 us  raw=2716
+t=160037 us  raw=2707
+t=180036 us  raw=2667
+t=200037 us  raw=2614
+t=220036 us  raw=2697
+t=240037 us  raw=2711
+t=260036 us  raw=2697
+t=280037 us  raw=2695
+t=300036 us  raw=2695
+t=320037 us  raw=2695
+t=340036 us  raw=2712
+t=360037 us  raw=2695
+t=380036 us  raw=2729
+t=400037 us  raw=2696
+t=420036 us  raw=2707
+t=440037 us  raw=2695
+t=460036 us  raw=2719
+t=480037 us  raw=2696
+t=500036 us  raw=2693
+--- alimentation OFF ---
+
+--- alimentation ON ---
+t=    74 us  raw=2696
+t= 20035 us  raw=2693
+t= 40036 us  raw=2695
+t= 60035 us  raw=2693
+t= 80036 us  raw=2696
+t=100035 us  raw=2695
+t=120036 us  raw=2687
+t=140035 us  raw=2695
+t=160036 us  raw=2695
+t=180035 us  raw=2695
+t=200036 us  raw=2688
+t=220035 us  raw=2695
+t=240036 us  raw=2695
+t=260035 us  raw=2693
+t=280036 us  raw=2693
+t=300035 us  raw=2693
+t=320036 us  raw=2695
+t=340035 us  raw=2695
+t=360036 us  raw=2693
+t=380035 us  raw=2695
+t=400036 us  raw=2694
+t=420035 us  raw=2695
+t=440036 us  raw=2693
+t=460035 us  raw=2688
+t=480036 us  raw=2693
+t=500035 us  raw=2695
+--- alimentation OFF ---
+

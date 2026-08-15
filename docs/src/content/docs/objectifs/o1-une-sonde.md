@@ -573,11 +573,16 @@ $ just fw-log 05-caracterisation air-libre
 enregistrement dans mesures/20260815-173800-05-caracterisation-air-libre.log
 ```
 
-`fw-log` fait la même chose que `fw`, mais garde une copie de la session dans
-`mesures/`. **Utilise-le plutôt que `fw` pour tout ce qui est une mesure** : le
-moniteur défile, le terminal tronque, et une caractérisation qu'on ne peut pas
-relire est une caractérisation à refaire. L'étiquette finale est libre — c'est
-elle qui te permettra de distinguer les trois états dans six mois.
+`fw-log` compile, téléverse et ouvre le moniteur exactement comme `fw`, mais
+garde une copie de la session dans `mesures/`, précédée d'un en-tête qui nomme
+le croquis et l'horodate. **Utilise-le plutôt que `fw` pour tout ce qui est une
+mesure** : le moniteur défile, le terminal tronque, et une caractérisation qu'on
+ne peut pas relire est une caractérisation à refaire. L'étiquette finale est
+libre — c'est elle qui te permettra de distinguer les trois états dans six mois.
+
+L'en-tête n'est pas décoratif : si la sortie enregistrée ne ressemble pas au
+croquis qu'il annonce, c'est que le téléversement a échoué et que tu es en train
+d'enregistrer le croquis précédent sous le mauvais nom.
 
 Le journal se dépouille ensuite avec :
 

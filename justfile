@@ -91,8 +91,18 @@ fw-log croquis etiquette="sans-etiquette":
     port=$(just _fw-port)
     mkdir -p mesures
     fichier="mesures/$(date +%Y%m%d-%H%M%S)-{{ croquis }}-{{ etiquette }}.log"
+    echo "carte détectée sur $port"
+    cd firmware
+    # Téléverser d'abord, comme `fw`. Sans ça, on enregistre la sortie du
+    # croquis précédemment flashé sous le nom du croquis demandé — un journal
+    # faux, et qui a l'air juste.
+    pio run -e {{ croquis }} -t upload --upload-port "$port"
+    # L'en-tête sert de preuve : si la sortie ne ressemble pas au croquis
+    # annoncé ici, c'est que le téléversement a échoué.
+    printf '# croquis   : %s\n# etiquette : %s\n# date      : %s\n\n' \
+      '{{ croquis }}' '{{ etiquette }}' "$(date -Is)" > "../$fichier"
     echo "enregistrement dans $fichier — Ctrl-C pour arrêter"
-    cd firmware && pio device monitor -e {{ croquis }} --port "$port" | tee "../$fichier"
+    pio device monitor -e {{ croquis }} --port "$port" | tee -a "../$fichier"
 
 # Ouvre le moniteur série sans recompiler (ex : just fw-monitor 04-sonde).
 fw-monitor croquis:
