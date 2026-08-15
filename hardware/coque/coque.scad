@@ -41,8 +41,8 @@
 //
 //  La v4 a ete imprimee : elle sort propre, mais la carte ne
 //  s'encastre pas. Un seul defaut, et c'est enc_y — estime a
-//  34 mm, il vaut ~19 mm. Les ergots tombaient 15 mm trop bas
-//  et la carte reposait dessus au lieu de s'asseoir.
+//  34 mm, il vaut 20. Les ergots tombaient 14 mm trop bas et
+//  la carte reposait dessus au lieu de s'asseoir.
 //
 //  Comment les cotes ont ete obtenues, parce que la methode
 //  compte ici plus que les chiffres :
@@ -61,7 +61,7 @@
 //  commune et se simplifie. Un seul etalon absolu suffit, et
 //  c'est une lecture directe au reglet : trait blanc a 26 mm.
 //
-//    encoche : debut 18,0 - centre 19,9 - fin 21,8, diam 3,77
+//    encoche : debut 18,0 - centre 20,0 - fin 22,0, diam 4,0
 //    PCB     : 23,0 mm de large, confirme
 //
 //  Verifie sur deux cadrages independants (o1-10 et o1-14),
@@ -69,8 +69,14 @@
 //  retombe sur les 18 mm lus directement au reglet, alors que
 //  rien dans le calcul ne l'y forcait.
 //
+//  Le rapport a en revanche donne 3,77 pour le diametre, la ou
+//  la mesure directe dit 4,0. Il ne s'est pas trompe de la meme
+//  facon : perdre 2 px de flou a chaque bord coute 0,8 % sur
+//  les 500 px du grand ecart, et 5,5 % sur les 73 px de
+//  l'encoche. La regle qui en sort : un rapport d'image mesure
+//  les longs ecarts, jamais les petits details.
+//
 //  RESTE A CONFIRMER AU PIED A COULISSE :
-//    enc_diam   diametre de l'encoche (3,77 vient des photos)
 //    pcb_t      epaisseur du PCB
 //    conn_dh    bord haut du PCB -> haut du connecteur
 //    conn_h     hauteur du connecteur au-dessus du PCB
@@ -109,14 +115,21 @@ butee   = true;    // epaulement de blocage sous le connecteur
 
 /* [Encoches laterales du PCB] */
 encoches = true;   // ergots venant se loger dans les 2 encoches
-enc_y    = 19.9;   // bord HAUT du PCB -> centre des encoches
-enc_diam = 3.77;   // diametre de l'encoche demi-circulaire     <<< A CONFIRMER
+enc_y    = 20.0;   // bord HAUT du PCB -> centre des encoches
+enc_diam = 4.0;    // diametre de l'encoche demi-circulaire     <<< MESURE
 // Rayon de l'ergot, volontairement plus petit que celui de
-// l'encoche : la difference (enc_diam/2 - ergot_r = 0,69 mm)
-// EST la tolerance de montage sur enc_y. Un ergot au diametre
-// exact de l'encoche n'entrerait qu'a la cote parfaite ; celui-ci
-// entre a 0,5 mm pres, et 0,57 mm de debattement vertical reste
-// sous le jeu de 0,8 mm de l'epaulement, qui prend le relais.
+// l'encoche. Deux raisons, pas une :
+//
+//   - la difference (enc_diam/2 - ergot_r = 0,80 mm) EST la
+//     tolerance de montage sur enc_y. Un ergot au diametre
+//     exact n'entrerait qu'a la cote parfaite ;
+//   - un petit cylindre sort TOUJOURS surdimensionne de
+//     l'imprimante — largeur d'extrusion et pied d'elephant
+//     ajoutent 0,1 a 0,2 mm au rayon. Le 2,4 modelise fait
+//     plutot 2,5 a 2,8 une fois pose sur le plateau.
+//
+// Le debattement vertical concede reste sous le jeu de 0,8 mm
+// de l'epaulement, qui prend le relais.
 ergot_r  = 1.2;
 
 /* [Corps] */

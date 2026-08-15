@@ -20,7 +20,7 @@ $ just coque-preview    # ouvre le modèle
 
 :::caution[La v4 a été imprimée, la carte n'entrait pas]
 La pièce sort propre, mais `enc_y` — la position des ergots le long de la carte
-— était estimée à 34 mm alors qu'elle vaut **19,9 mm**. Les ergots tombaient
+— était estimée à 34 mm alors qu'elle vaut **20 mm**. Les ergots tombaient
 14 mm trop bas, la carte reposait dessus au lieu de s'asseoir dedans.
 
 La cote est maintenant relevée, et la v5 la corrige. Voir [le relevé qui
@@ -136,17 +136,17 @@ et la carte n'entre pas.
 
 Deux corrections, l'une de position, l'autre de forme.
 
-**La position.** `enc_y` passe de 34,0 à **19,9 mm**. C'est le seul défaut qui
+**La position.** `enc_y` passe de 34,0 à **20,0 mm**. C'est le seul défaut qui
 empêchait l'encastrement, et c'était le bon soupçon : la v4 posait les ergots
 14 mm trop bas, la carte s'appuyait dessus.
 
-**La forme.** L'encoche n'est pas un rectangle mais un **demi-cercle** de
-3,77 mm de diamètre. L'ergot rectangulaire de la v4 (3,4 × 1,2 mm) n'y serait
-pas entré de toute façon : à 1,7 mm du centre, l'arc ne creuse plus que 0,8 mm,
-et les coins de l'ergot auraient buté dessus.
+**La forme.** L'encoche n'est pas un rectangle mais un **demi-cercle de
+⌀4 mm**. L'ergot rectangulaire de la v4 (3,4 × 1,2 mm) n'y serait pas entré de
+toute façon : à 1,7 mm du centre, l'arc ne creuse plus que 1,05 mm, et les
+coins de l'ergot auraient buté dessus.
 
 ```text
-        encoche ⌀3,77            ergot ⌀2,4
+        encoche ⌀4,0             ergot ⌀2,4
    ────────╮      ╭───────    ────────╮  ╭───────
            ╰──────╯                   ╰──╯
    la v4 y mettait un rectangle 3,4 × 1,2 :
@@ -155,11 +155,18 @@ et les coins de l'ergot auraient buté dessus.
 ```
 
 L'ergot est donc un **cylindre**, centré sur le chant de la carte, et
-**délibérément plus petit que l'encoche** : cette différence de rayon —
-1,885 − 1,2 = **0,685 mm** — *est* la tolérance de montage sur `enc_y`. Un
-ergot au diamètre exact n'entrerait qu'à la cote parfaite. Celui-ci accepte
-deux tiers de millimètre d'erreur, et le débattement vertical qu'il concède
-reste sous le jeu de 0,8 mm de l'épaulement, qui prend le relais.
+**délibérément plus petit que l'encoche**. Pour deux raisons, pas une :
+
+- la différence de rayon — 2,0 − 1,2 = **0,8 mm** — *est* la tolérance de
+  montage sur `enc_y`. Un ergot au diamètre exact n'entrerait qu'à la cote
+  parfaite, ce qui est précisément le piège où la v4 est tombée ;
+- **un petit cylindre sort toujours surdimensionné de l'imprimante.** Largeur
+  d'extrusion et pied d'éléphant ajoutent 0,1 à 0,2 mm au rayon : le ⌀2,4
+  modélisé fera plutôt 2,5 à 2,8 une fois posé sur le plateau. Viser le
+  diamètre nominal de l'encoche, c'est se garantir un ergot trop gros.
+
+Le débattement vertical concédé reste sous le jeu de 0,8 mm de l'épaulement,
+qui prend le relais.
 
 Un petit cône en tête sert de guide à la pose.
 
@@ -171,16 +178,16 @@ une carte factice percée de ses encoches :
 ```console
 $ just coque-test
   ok    décalage     0 mm : libre
-  ok    décalage   0.6 mm : libre
-  ok    décalage  -0.6 mm : libre
-  ok    décalage   0.7 mm : bute
-  ok    décalage  -0.7 mm : bute
+  ok    décalage   0.7 mm : libre
+  ok    décalage  -0.7 mm : libre
+  ok    décalage   0.9 mm : bute
+  ok    décalage  -0.9 mm : bute
   ok    décalage   1.5 mm : bute
   ok    décalage  -1.5 mm : bute
 ergots OK
 ```
 
-La bascule tombe exactement sur les 0,685 mm calculés. C'est ce test qui
+La bascule tombe exactement sur les 0,8 mm calculés. C'est ce test qui
 aurait dû tourner avant la première impression : le modèle se rendait, il
 n'était pas pour autant montable.
 
@@ -212,16 +219,16 @@ le trait blanc est à 26 mm du bord haut.
               ▼          ▼           ▼              ▼
    ═══════════╤══════════╤═══════════╤══════════════╤═════════
               │◄─ 18,0 ─►│           │              │
-              │◄──── 19,9 (enc_y) ──►│              │
+              │◄──── 20,0 (enc_y) ──►│              │
               │◄──────────── 26,0 mm, lu au réglet ►│
 ```
 
 | Repère | Distance au bord haut du PCB |
 |---|---|
 | Début de l'encoche, côté connecteur | 18,0 mm |
-| **Centre de l'encoche → `enc_y`** | **19,9 mm** *(le modèle disait 34,0)* |
-| Fin de l'encoche | 21,8 mm |
-| Diamètre de l'encoche | 3,77 mm |
+| **Centre de l'encoche → `enc_y`** | **20,0 mm** *(le modèle disait 34,0)* |
+| Fin de l'encoche | 22,0 mm |
+| Diamètre de l'encoche | 4,0 mm *(mesuré)* |
 | Trait blanc de sérigraphie *(étalon)* | 26,0 mm |
 | Largeur du PCB → `pcb_w` | 23,0 mm **confirmé** |
 
@@ -231,6 +238,22 @@ le trait blanc est à 26 mm du bord haut.
 calcul ne l'y forçait : c'est ce qui permet de faire confiance au reste.
 
 ![La même sonde sur le réglet, cadrage serré sur les composants et le connecteur, graduations 9 à 13 cm](../../../assets/photos/o1-14-encoches-reglet-serre.jpg)
+
+### Où le rapport se trompe quand même
+
+Le même calcul donnait **3,77 mm** pour le diamètre de l'encoche, là où la
+mesure directe dit **4,0**. Ce n'est pas une contradiction, c'est une limite de
+la méthode, et elle a une forme précise.
+
+Le flou de bord coûte environ deux pixels à chaque extrémité d'un repère. Sur
+les 500 pixels qui séparent le coin haut du trait blanc, ça fait 0,8 % —
+invisible. Sur les 73 pixels de l'encoche, ça fait **5,5 %** — soit exactement
+l'écart constaté.
+
+:::tip[La règle qui en sort]
+Un rapport mesuré sur une image mesure les **longs écarts**, jamais les petits
+détails. Le grand écart calibre, le petit détail se mesure à la main.
+:::
 
 :::note[Le trait blanc rouvre la question du `pcb_in` — reportée à O7]
 Ce trait est la **limite d'immersion** de la carte : en dessous, plus un seul
@@ -260,9 +283,9 @@ positions.
 
 | Variable | Ce que c'est | Valeur actuelle | Statut |
 |---|---|---|---|
-| `enc_y` | bord haut du PCB → centre des encoches | 19,9 mm | ✅ relevé |
+| `enc_y` | bord haut du PCB → centre des encoches | 20,0 mm | ✅ relevé |
 | `pcb_w` | largeur du PCB | 23,0 mm | ✅ confirmé |
-| `enc_diam` | diamètre de l'encoche demi-circulaire | 3,77 mm | déduit du rapport |
+| `enc_diam` | diamètre de l'encoche demi-circulaire | 4,0 mm | ✅ mesuré |
 | `pcb_t` | épaisseur du PCB | 1,6 mm | à confirmer |
 | `conn_l` | longueur du connecteur le long du PCB | 8,7 mm | standard PH2.0-3P |
 | `conn_dh` | bord haut du PCB → haut du connecteur | 0 mm | à confirmer |

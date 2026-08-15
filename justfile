@@ -168,7 +168,7 @@ coque-test:
     tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
     echec=0
     # décalage:attendu — "libre" = aucun volume commun, "bute" = contact
-    for cas in 0:libre 0.6:libre -0.6:libre 0.7:bute -0.7:bute 1.5:bute -1.5:bute; do
+    for cas in 0:libre 0.7:libre -0.7:libre 0.9:bute -0.9:bute 1.5:bute -1.5:bute; do
       d=${cas%:*}; attendu=${cas#*:}
       rm -f "$tmp/i.stl"
       # Volume commun nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le

@@ -61,11 +61,16 @@ Le numéro suit l'ordre des étapes de l'objectif, pas l'ordre de prise de vue.
 Trois `../` depuis `src/content/docs/<section>/` : deux ne suffisent pas et
 Astro échoue au build avec `image-not-found`.
 
-:::caution[Renommer une photo demande de relancer `just dev`]
+:::caution[Renommer ou supprimer une image demande de relancer `just dev`]
 Astro tient un cache des images dans `docs/.astro/content-assets.mjs`. Il ne
-suit pas les renommages : le serveur de développement continue de chercher
-l'ancien nom et affiche `ImageNotFound`, alors que le fichier existe sous son
-nouveau nom et que `just build` passe.
+suit ni les renommages ni les suppressions : le serveur de développement
+continue de chercher l'ancien nom et affiche `ImageNotFound`, alors que le
+fichier existe sous son nouveau nom — ou n'a plus lieu d'exister — et que
+`just build` passe sans broncher.
+
+Le symptôme trompe, parce que l'erreur pointe le **cache** et pas la page. Si
+`just build` et `just links` passent, la documentation n'est pas cassée : c'est
+le serveur qui est en retard.
 
 Coupe le serveur et relance-le. Si l'erreur résiste, `just clean` vide le cache
 et `dist/`.
@@ -120,7 +125,7 @@ bloquantes pour l'impression.
 
 | # | Photo | Pourquoi |
 |---|---|---|
-| `o1-10` ✅ | Gros plan sur les **deux encoches latérales**, avec un réglet dans le même plan que la carte | A donné `enc_y` à 19,9 mm quand le modèle en disait 34 — [le relevé](/materiel/coque-des-sondes/#le-relevé-qui-a-tranché) |
+| `o1-10` ✅ | Gros plan sur les **deux encoches latérales**, avec un réglet dans le même plan que la carte | A donné `enc_y` à 20 mm quand le modèle en disait 34 — [le relevé](/materiel/coque-des-sondes/#le-relevé-qui-a-tranché) |
 | `o1-11` | Le connecteur PH2.0 vu de côté, réglet ou pied à coulisse dans le cadre | `conn_l`, `conn_dh`, `conn_h` |
 | `o1-12` | La sonde à plat sur du papier millimétré | Permet de recontrôler toutes les cotes après coup |
 | `o1-13` ✅ | La coque imprimée posée à côté de la sonde, à plat | L'état de la v4, celle qui ne se montait pas |
