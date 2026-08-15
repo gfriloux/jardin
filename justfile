@@ -158,6 +158,42 @@ coque-stl:
 coque-preview:
     openscad hardware/coque/coque.scad
 
+# Banc d'essai des ergots : la carte factice doit se poser libre à la cote
+# nominale, et buter sur les ergots dès qu'on la décale le long de son axe.
+# C'est ce test qui aurait dû tourner avant la première impression : le modèle
+# se rendait, la carte n'entrait pas.
+coque-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    echec=0
+    # décalage:attendu — "libre" = aucun volume commun, "bute" = contact
+    for cas in 0:libre 0.5:libre -0.5:libre 0.6:bute -0.6:bute 1.5:bute -1.5:bute; do
+      d=${cas%:*}; attendu=${cas#*:}
+      rm -f "$tmp/i.stl"
+      # Volume commun nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le
+      # dit sur stderr. Il faut lire ce message, sinon une vraie erreur de
+      # syntaxe passerait pour un montage qui tombe juste.
+      err=$(openscad -o "$tmp/i.stl" -D 'piece="interference"' -D "essai=$d" \
+            hardware/coque/coque.scad 2>&1 >/dev/null || true)
+      if [ -s "$tmp/i.stl" ] && grep -q '^ *facet' "$tmp/i.stl"; then
+        obtenu=bute
+      elif printf '%s' "$err" | grep -q 'top level object is empty'; then
+        obtenu=libre
+      else
+        printf '%s\n' "$err" >&2
+        echo "openscad n'a produit ni volume ni « objet vide »" >&2
+        exit 1
+      fi
+      if [ "$obtenu" = "$attendu" ]; then
+        printf '  ok    décalage %+5s mm : %s\n' "$d" "$obtenu"
+      else
+        printf '  ÉCHEC décalage %+5s mm : %s, attendu %s\n' "$d" "$obtenu" "$attendu"
+        echec=1
+      fi
+    done
+    [ $echec -eq 0 ] && echo "ergots OK" || (echo "les ergots ne tiennent pas la carte" >&2; exit 1)
+
 # Supprime les STL générés.
 coque-clean:
     rm -rf hardware/coque/build

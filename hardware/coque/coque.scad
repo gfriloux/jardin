@@ -17,9 +17,10 @@
 //
 //  Principe :
 //   - la coque s'ouvre : on POSE le PCB dedans, on visse
-//   - deux ergots se logent dans les encoches laterales du
-//     PCB : la carte est prise dans une mortaise, aucun
-//     debattement vertical dans un sens comme dans l'autre
+//   - deux ergots CYLINDRIQUES se logent dans les encoches
+//     laterales du PCB, qui sont des demi-cercles : la carte
+//     est prise dans une mortaise, aucun debattement vertical
+//     dans un sens comme dans l'autre
 //   - un epaulement sous le connecteur PH2.0 sert de second
 //     niveau, avec 0.8 mm de jeu : il ne travaille que si un
 //     ergot casse
@@ -36,27 +37,45 @@
 //  M3x12 inox (avant-trou 2.5).
 //
 //  =========================================================
-//  A MESURER AU PIED A COULISSE AVANT D'IMPRIMER
-//  Les valeurs ci-dessous sont des estimations. Celle qui
-//  pardonne le moins est enc_y : fausse de plus d'un
-//  millimetre, la carte ne se pose pas a plat et la coquille
-//  refuse de fermer.
+//  ETAT DES COTES  (v5, apres la premiere impression d'essai)
 //
-//    pcb_w, pcb_t   dimensions du PCB
-//    conn_l         longueur du connecteur le long du PCB
-//    conn_dh        bord haut du PCB -> haut du connecteur
-//    conn_h         hauteur du connecteur au-dessus du PCB
-//    enc_y          bord haut du PCB -> centre des encoches
-//    enc_prof       profondeur de l'encoche dans le chant
-//    enc_long       longueur de l'encoche le long du PCB
+//  La v4 a ete imprimee : elle sort propre, mais la carte ne
+//  s'encastre pas. Un seul defaut, et c'est enc_y — estime a
+//  34 mm, il vaut ~19 mm. Les ergots tombaient 15 mm trop bas
+//  et la carte reposait dessus au lieu de s'asseoir.
 //
-//  Si les encoches marquent la profondeur d'enfoncement
-//  maximale conseillee, il faut en plus reduire pcb_in pour
-//  que le bas du boitier tombe pile au repere.
+//  Releve sur photo au reglet (graduations au 1/2 mm servant
+//  d'etalon) + lecture directe au reglet :
+//    encoche : debut a 17,2 mm du bord haut (lecture directe
+//              du bord : 18 mm), fin a 20,7 mm, diametre 3,55
+//    PCB     : 22,6 mm de large -> 23,0 nominal confirme
+//    trait blanc de serigraphie a 24,7 mm du bord haut
+//
+//  Les deux releves de enc_y (18,95 par la photo, 19,8 par la
+//  lecture directe) s'ecartent de 0,85 mm. La valeur retenue,
+//  19,4, est a moins de 0,45 mm de chacun — et l'ergot rond
+//  tolere 0,57 mm (voir ergot_r). Les deux hypotheses passent.
+//
+//  RESTE A CONFIRMER AU PIED A COULISSE :
+//    enc_diam   diametre de l'encoche (3,55 vient de la photo)
+//    pcb_t      epaisseur du PCB
+//    conn_dh    bord haut du PCB -> haut du connecteur
+//    conn_h     hauteur du connecteur au-dessus du PCB
+//
+//  L'encoche n'est PAS le repere d'enfoncement maximal : a
+//  19 mm du bord haut, elle est trop pres du connecteur pour
+//  ca. Le trait blanc a 24,7 mm est le candidat serieux, et il
+//  reste lui aussi bien au-dessus du bas de la coque. pcb_in
+//  n'a donc pas a etre reduit.
 // =========================================================
 
 /* [Piece a exporter] */
-piece = "avant";   // ["avant","arriere","assemblage"]
+piece = "avant";   // ["avant","arriere","pose","assemblage","interference"]
+
+// Banc d'essai : decalage de la carte factice le long de son axe,
+// en mm, pour la piece "interference". A 0 la carte doit se poser
+// sans toucher les ergots ; decalee, elle doit buter dessus.
+essai = 0;
 
 /* [Capteur] */
 pcb_w   = 23.0;    // largeur du PCB
@@ -69,10 +88,15 @@ butee   = true;    // epaulement de blocage sous le connecteur
 
 /* [Encoches laterales du PCB] */
 encoches = true;   // ergots venant se loger dans les 2 encoches
-enc_y    = 34.0;   // bord HAUT du PCB -> centre des encoches   <<< A MESURER
-enc_prof = 1.5;    // profondeur de l'encoche dans le chant     <<< A MESURER
-enc_long = 4.0;    // longueur de l'encoche le long du PCB      <<< A MESURER
-enc_jeu  = 0.3;    // jeu de montage
+enc_y    = 19.4;   // bord HAUT du PCB -> centre des encoches
+enc_diam = 3.55;   // diametre de l'encoche demi-circulaire     <<< A CONFIRMER
+// Rayon de l'ergot, volontairement plus petit que celui de
+// l'encoche : la difference (enc_diam/2 - ergot_r = 0,57 mm)
+// EST la tolerance de montage sur enc_y. Un ergot au diametre
+// exact de l'encoche n'entrerait qu'a la cote parfaite ; celui-ci
+// entre a 0,5 mm pres, et 0,57 mm de debattement vertical reste
+// sous le jeu de 0,8 mm de l'epaulement, qui prend le relais.
+ergot_r  = 1.2;
 
 /* [Corps] */
 H       = 52.0;    // hauteur du corps
@@ -151,13 +175,19 @@ module p_gorge() { difference() { offset(delta=-0.7) p_ext(); offset(delta=-1.8)
 
 // ---------------- pieces 3D --------------------------------
 
+// Ergots ronds, centres sur le chant du PCB. La moitie interieure
+// remplit l'encoche, la moitie exterieure est noyee dans la paroi
+// du logement : l'ergot est ancre, pas colle sur une surface.
+// Le petit cone du haut sert de guide a la pose.
 module ergots() {
-    pen = enc_prof - enc_jeu;          // penetration dans l'encoche
-    L   = max(1.5, enc_long - 2*enc_jeu);
+    h_cyl = pcb_t * 0.9;               // fut droit, sur l'epaisseur utile
+    h_cne = pcb_t + 0.3 - h_cyl;       // guide, jusqu'au plan de joint
     for (s = [-1, 1])
-        translate([s * (pcb_w/2 - pen), pcb_in - enc_y - L/2, ep_av - (pcb_t + 0.3)])
-            mirror([s < 0 ? 1 : 0, 0, 0])
-                cube([pcb_w/2 + jeu - (pcb_w/2 - pen), L, pcb_t + 0.3]);
+        translate([s * pcb_w/2, pcb_in - enc_y, ep_av - (pcb_t + 0.3)]) {
+            cylinder(r = ergot_r, h = h_cyl);
+            translate([0, 0, h_cyl])
+                cylinder(r1 = ergot_r, r2 = ergot_r - 0.5, h = h_cne);
+        }
 }
 
 module coque_avant() {
@@ -183,16 +213,32 @@ module coque_arriere() {
     }
 }
 
+// Carte factice, encoches comprises : c'est elle qui sert de banc
+// d'essai. `just coque-test` intersecte les ergots avec elle et
+// echoue si le volume commun n'est pas nul.
 module pcb_factice() {
     color("green")
-    translate([-pcb_w/2, -50, ep_av - pcb_t - 0.3])
-        cube([pcb_w, 98, pcb_t]);
+    difference() {
+        translate([-pcb_w/2, -50, ep_av - pcb_t - 0.3])
+            cube([pcb_w, 98, pcb_t]);
+        for (s = [-1, 1])
+            translate([s * pcb_w/2, pcb_in - enc_y, ep_av - pcb_t - 1.3])
+                cylinder(d = enc_diam, h = pcb_t + 2);
+    }
 }
 
 if (piece == "avant")   coque_avant();
 if (piece == "arriere") coque_arriere();
+// Coquille avant + carte posee dedans, coquille arriere otee : la vue
+// qui montre si l'ergot tombe dans l'encoche.
+if (piece == "pose") {
+    coque_avant();
+    translate([0, essai, 0]) pcb_factice();
+}
 if (piece == "assemblage") {
     coque_avant();
-    pcb_factice();
+    translate([0, essai, 0]) pcb_factice();
     translate([0, 0, ep_av + ep_ar + 0.2]) mirror([0,0,1]) coque_arriere();
 }
+if (piece == "interference")
+    intersection() { ergots(); translate([0, essai, 0]) pcb_factice(); }
