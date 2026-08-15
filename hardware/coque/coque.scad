@@ -75,14 +75,19 @@
 //    conn_dh    bord haut du PCB -> haut du connecteur
 //    conn_h     hauteur du connecteur au-dessus du PCB
 //
-//  ATTENTION, QUESTION OUVERTE SUR pcb_in :
+//  pcb_in RESTE A 48, ET C'EST UN CHOIX :
 //  le trait blanc a 26 mm est la limite d'immersion de la
 //  carte, et sous lui il n'y a plus que l'electrode. La coque
 //  engage 48 mm, soit 22 mm en dessous de ce trait : elle
 //  limite l'enfoncement a 50 mm d'electrode dans le sol la ou
 //  la carte en autorise 72. Reduire pcb_in a ~30 rendrait ces
-//  22 mm — au prix d'une refonte des proportions (H, vis_pos,
-//  jupe, col). Decision a prendre avant la prochaine impression.
+//  22 mm, au prix d'une refonte des proportions (H, vis_pos,
+//  jupe, col).
+//
+//  On ne le fait pas maintenant : la v5 corrige un seul defaut,
+//  et changer la hauteur du boitier en meme temps rendrait le
+//  resultat de l'impression illisible. La profondeur utile est
+//  une question de sol, pas de modele — elle se tranche a O7.
 // =========================================================
 
 /* [Piece a exporter] */

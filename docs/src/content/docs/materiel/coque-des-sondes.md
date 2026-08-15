@@ -232,7 +232,7 @@ calcul ne l'y forçait : c'est ce qui permet de faire confiance au reste.
 
 ![La même sonde sur le réglet, cadrage serré sur les composants et le connecteur, graduations 9 à 13 cm](../../../assets/photos/o1-14-encoches-reglet-serre.jpg)
 
-:::caution[Le trait blanc rouvre la question du `pcb_in`]
+:::note[Le trait blanc rouvre la question du `pcb_in` — reportée à O7]
 Ce trait est la **limite d'immersion** de la carte : en dessous, plus un seul
 composant, rien que l'électrode jusqu'à la pointe.
 
@@ -242,10 +242,14 @@ carte nue tolère. Mais elle **limite l'enfoncement à 50 mm d'électrode dans l
 sol** là où la carte en autorise 72 : on ne pousse la sonde que jusqu'à la lèvre
 de la coque.
 
-Descendre `pcb_in` à ~30 mm rendrait ces 22 mm de profondeur, au prix d'une
-refonte des proportions (`H`, `vis_pos`, la jupe, le col). **Décision à prendre
-avant la prochaine impression** — elle dépend de la profondeur à laquelle on
-veut lire le sol, pas du modèle.
+Descendre `pcb_in` à ~30 mm rendrait ces 22 mm, au prix d'une refonte des
+proportions (`H`, `vis_pos`, la jupe, le col).
+
+**Décision prise : on n'y touche pas maintenant.** La v5 corrige un seul défaut,
+et c'est ce qu'il faut pour savoir s'il est corrigé — changer la hauteur du
+boîtier en même temps rendrait le résultat illisible. La profondeur
+d'enfoncement est une question de sol, pas de modèle : elle se tranchera à
+[O7](/objectifs/o7-mise-au-jardin/#létanchéité), sur des mesures.
 :::
 
 ## Les cotes restantes
