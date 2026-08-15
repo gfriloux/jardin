@@ -31,5 +31,14 @@ jardin/
 
 ## État
 
-`O0` tenu : dépôt, devshell, documentation. Le matériel du POC arrive les
-15 et 16 août 2026. Voir la feuille de route dans la documentation.
+`O0` et `O1` tenus : dépôt, devshell, documentation, et une sonde caractérisée
+sur six états — de l'air libre à la terre saturée. `O3` et `O4` sont prêts à
+démarrer. Voir la feuille de route dans la documentation.
+
+## Licence
+
+[Apache 2.0](LICENSE), code et documentation.
+
+Une réserve si tu réutilises les mesures : elles décrivent **un** sol, **un**
+lot de sondes bon marché et **un** été. Les valeurs brutes de ce dépôt n'ont
+aucune raison de se transposer ailleurs — la méthode, si.
