@@ -46,6 +46,46 @@ critère de sortie — « identiques à celles obtenues quand chaque sonde est
 branchée seule sur l'ADC ».
 :::
 
+### Sur la breadboard
+
+`GND` et `VCC` sont **communs aux trois sondes** : ils vont donc dans les rails,
+qui sont faits pour ça. `AOUT` ne l'est pas — les trois doivent rester sur trois
+lignes distinctes, sans quoi les sondes sont court-circuitées entre elles et
+renvoient toutes la même valeur.
+
+| Où | Ce qui s'y branche |
+|---|---|
+| Rail `−` | `GND` de la carte + les **trois** `GND` des sondes |
+| Rail `+` | **GPIO 6** de la carte + les **trois** `VCC` des sondes |
+| Ligne 5 | `AOUT` de S1 + strap vers **GPIO 7** |
+| Ligne 10 | `AOUT` de S2 + strap vers **GPIO 2** |
+| Ligne 15 | `AOUT` de S3 + strap vers **GPIO 4** |
+
+Les numéros de ligne sont libres, pourvu que les trois `AOUT` soient sur des
+lignes différentes et que, dans chaque ligne, les deux fils tombent du même côté
+de la rainure — voir
+[le fonctionnement d'une breadboard](/objectifs/o1-une-sonde/#si-tu-nas-jamais-utilisé-de-breadboard).
+
+:::danger[Le rail `+` ne porte pas du 3V3]
+Il porte **GPIO 6**, que la carte allume et éteint. Un fil 3V3 qui atterrirait
+dans ce rail mettrait une broche du microcontrôleur en court-circuit avec
+l'alimentation.
+
+Les rails sérigraphiés en rouge et bleu mentent donc ici. Un bout de ruban
+adhésif avec « GPIO 6 » écrit dessus coûte dix secondes et évite l'erreur dans
+trois semaines.
+:::
+
+Deux détails qui se paient cher :
+
+- **Les rails sont souvent coupés au milieu** sur les modèles 830 points, ce
+  qu'une interruption du trait imprimé signale. Si les trois sondes ne tiennent
+  pas sur une moitié, il faut un strap pour ponter les deux tronçons — sinon les
+  sondes du fond ne sont alimentées par rien.
+- **15 mA au total** sur GPIO 6, pour 40 mA disponibles. Confortable à trois.
+  C'est à la huitième sonde que le transistor de [O2](/objectifs/o2-multiplexage/)
+  devient obligatoire.
+
 ```console
 $ just fw-log 07-trois-sondes trois-sondes-meme-pot
 ```
