@@ -104,6 +104,9 @@ saisons.
 - Où héberger la partie serveur maintenant que la surveillance doit être
   continue ?
 - Faut-il déjà une deuxième zone (potager, verger) ?
+- Faut-il un second lot de sondes ? *(venue de [O3](/objectifs/o3-calibration/) :
+  leur divergence de 7,8 points ne le justifie pas, mais la couverture de quinze
+  mètres d'allée peut-être.)*
 
 ## Résultats
 

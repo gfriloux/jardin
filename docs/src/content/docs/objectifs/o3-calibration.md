@@ -3,6 +3,9 @@ title: O3 — Calibration
 description: Savoir ce que vaut réellement un nombre d'ADC, et de combien les sondes divergent.
 sidebar:
   order: 3
+  badge:
+    text: Tenu
+    variant: success
 ---
 
 **La question.** Que vaut réellement un nombre d'ADC, et de combien deux sondes
@@ -210,12 +213,29 @@ Voir [ADR-002](/decisions/#adr-002--on-stocke-la-valeur-adc-brute).
 - ~~La réponse est-elle assez linéaire pour une interpolation à deux points ?~~
   Sans objet depuis
   [l'ADR-015](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité).
-- L'effet de la température est-il visible sur une journée d'août ?
-- Faut-il commander un second lot de sondes ?
+Deux questions restaient posées ici. Aucune ne se tranche sur une table, et
+elles ont donc rejoint les objectifs où elles deviennent mesurables :
+
+- l'effet de la température sur un cycle jour/nuit → [O8](/objectifs/o8-exploitation/#questions-ouvertes),
+  où il se lira dans les premières données continues ;
+- l'opportunité d'un second lot de sondes → [O7](/objectifs/o7-mise-au-jardin/#questions-ouvertes),
+  puisque c'est une question de couverture du terrain, pas de calibration.
 
 ## Résultats
 
 ### 15 août 2026 — les sondes sont interchangeables
+
+:::note[Le critère de sortie a été révisé après la mesure]
+Il demandait « une courbe de référence par sonde ». La divergence s'est révélée
+négligeable, puis
+[l'ADR-015](/decisions/#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité)
+a retiré l'exigence — dans cet ordre.
+
+Le raisonnement de l'ADR tient indépendamment du résultat : on ne calibre pas
+finement un système qui prend une décision binaire, et ce serait vrai même si
+les sondes avaient divergé de 300 points. Mais la chronologie est celle-là, et
+elle est écrite ici pour qu'on puisse en juger.
+:::
 
 `07-trois-sondes`, trois sondes lues dans la même fenêtre de temps, deux milieux
 successifs :

@@ -78,7 +78,7 @@ Trois choses à lire dans ce graphe :
 | [O0](/objectifs/o0-socle/) | Socle projet | Où vit le code, comment on le construit, où on documente ? | ✅ tenu |
 | [O1](/objectifs/o1-une-sonde/) | Une sonde, une valeur | Est-ce qu'une sonde donne une valeur stable et plausible ? | ✅ tenu |
 | [O2](/objectifs/o2-multiplexage/) | Passer à N sondes | Est-ce qu'un nœud peut lire plus de quatre sondes sans se mélanger ? | ⏸ multiplexeur non livré |
-| [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | 🔜 prêt — trois sondes en direct |
+| [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | ✅ tenu |
 | [O4](/objectifs/o4-lien-radio/) | Le lien radio | Est-ce que LoRa porte depuis le fond du jardin ? | 🔜 prêt |
 | [O5](/objectifs/o5-chaine-de-donnees/) | La chaîne de données | Est-ce que l'architecture de données est agréable à exploiter ? | ⏸ bloqué |
 | [O6](/objectifs/o6-autonomie/) | Autonomie | Combien de temps le nœud tient-il, et sur quelle source ? | ⏸ bloqué |
