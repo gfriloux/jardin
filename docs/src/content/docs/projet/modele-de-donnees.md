@@ -140,6 +140,10 @@ Pas besoin de photo satellite — inutilisable de toute façon si des arbres
 masquent une partie du terrain — ni d'une capture d'écran du cadastre, limitée
 en zoom. Le cadastre est disponible en **vecteur** via l'API carto de l'IGN :
 
+Les trois identifiants se lisent sur
+[cadastre.gouv.fr](https://www.cadastre.gouv.fr/) : le code INSEE de la commune,
+la section, et le numéro de parcelle.
+
 ```console
 $ ./tools/plan-parcelle.py --insee <insee> --section <section> --numero <numero> \
       --out docs/src/assets/plan/parcelle.svg
@@ -170,11 +174,26 @@ conversion en comparant la surface calculée à la contenance cadastrale.
 Graduations en mètres, majeures tous les 5 m.</figcaption>
 </figure>
 
-:::note[Ce plan est anonyme]
-Le SVG ne contient que des **mètres relatifs à un coin du terrain** — aucune
-latitude, aucune longitude. Il peut donc être publié sans révéler où se trouve
-le jardin. Les paramètres de transformation (origine réelle et rotation) n'ont
-pas à être versionnés : le repère local se suffit à lui-même.
+:::caution[Ne jamais versionner les identifiants cadastraux]
+Code INSEE, section et numéro de parcelle désignent **exactement** un terrain, et
+l'API carto de l'IGN est ouverte à tous : les inscrire dans la documentation
+revient à publier son adresse. C'est pourquoi les exemples de cette page portent
+des marqueurs et non des valeurs.
+
+Passe les tiens en ligne de commande, une fois, au moment de générer le SVG.
+Ils n'ont aucune raison d'entrer dans le dépôt.
+:::
+
+:::note[Le SVG produit, lui, est anonyme]
+Il ne contient que des **mètres relatifs à un coin du terrain** — aucune
+latitude, aucune longitude. Il peut donc être versionné et publié. Les
+paramètres de transformation, origine réelle et rotation, n'ont pas à être
+conservés : le repère local se suffit à lui-même.
+
+Restent la **forme du polygone et sa surface**, qui sont en théorie
+rapprochables du cadastre par comparaison géométrique. C'est un travail
+autrement plus coûteux que de lire trois identifiants, et on l'assume — mais
+autant le savoir.
 :::
 
 :::caution[Ne pas confondre zones et interpolation]
