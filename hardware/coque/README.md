@@ -7,18 +7,21 @@ capacitives v1.2 (DollaTek, ASIN `B07L2RV1D2`) en extérieur.
 
 ```console
 $ just coque-stl          # produit hardware/coque/build/*.stl
+$ just coque-test         # banc d'essai des ergots
 $ just coque-preview      # ouvre le modèle dans OpenSCAD
 ```
 
 ## ⚠️ Avant d'imprimer
 
-Les cotes du fichier sont des **estimations**. Sept mesures au pied à coulisse
-sont à relever sur une sonde réelle et à reporter en tête de `coque.scad` — la
-liste est dans l'en-tête du fichier et dans
-[la documentation](../../docs/src/content/docs/materiel/coque-des-sondes.md).
+**Passe `just coque-test`.** Il intersecte les ergots avec une carte factice
+percée de ses encoches : la carte doit se poser libre à la cote nominale et
+buter dès qu'on la décale. La v4 a été imprimée sans ce test — elle se rendait
+proprement, mais `enc_y` valait 34 mm au lieu de 19 et la carte n'entrait pas.
 
-`enc_y` est la cote qui pardonne le moins : fausse de plus d'un millimètre, la
-carte ne se pose pas à plat et la coquille refuse de fermer.
+Les cotes restantes (`enc_diam`, `pcb_t`, `conn_dh`, `conn_h`) sont encore à
+confirmer au pied à coulisse. Aucune n'est bloquante : ce sont des jeux, pas
+des positions. La liste est dans l'en-tête de `coque.scad` et dans
+[la documentation](../../docs/src/content/docs/materiel/coque-des-sondes.md).
 
 ## Ce que la coque ne fait pas
 

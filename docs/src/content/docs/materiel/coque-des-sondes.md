@@ -4,24 +4,27 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: Mesures requises
+    text: v5 à réimprimer
     variant: caution
 ---
 
 Les sondes vivront dehors. Leur électronique n'est pas protégée. Ce travail de
-conception, mené en amont du projet, produit un boîtier imprimable en 3D —
-paramétrique, versionné dans `hardware/coque/`.
+conception produit un boîtier imprimable en 3D — paramétrique, versionné dans
+`hardware/coque/`.
 
 ```console
 $ just coque-stl        # génère les deux coquilles
+$ just coque-test       # banc d'essai des ergots
 $ just coque-preview    # ouvre le modèle
 ```
 
-:::danger[Les fichiers ne sont pas prêts à imprimer]
-Sept cotes du modèle sont des **estimations**. Il faut les relever au pied à
-coulisse sur une sonde réelle — voir [les mesures à
-prendre](#les-sept-mesures-à-prendre). Imprimer en l'état produirait une pièce
-qui ne se ferme pas.
+:::caution[La v4 a été imprimée, la carte n'entrait pas]
+La pièce sort propre, mais `enc_y` — la position des ergots le long de la carte
+— était estimée à 34 mm alors qu'elle vaut **19 mm**. Les ergots tombaient
+15 mm trop bas, la carte reposait dessus au lieu de s'asseoir dedans.
+
+La cote est maintenant relevée, et la v5 la corrige. Voir [le relevé qui
+a tranché](#le-relevé-qui-a-tranché).
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -122,56 +125,113 @@ que si un ergot casse. Les deux butées bloquant dans le même sens et chacune
 ayant son jeu, il n'y a pas de risque de sur-contrainte.
 
 Les ergots sont **volontairement sous-dimensionnés** : 0,3 mm moins profonds
-que l'encoche, 0,6 mm plus courts. Si les encoches sont arrondies plutôt que
-carrées, un ergot rectangulaire un peu maigre se loge quand même dedans et porte
-sur les tangentes.
+que l'encoche, 0,6 mm plus courts.
 
-![Rendu de la coquille avant en v4 : le logement du PCB, la jupe évasée en bas, et le col de cygne qui remonte puis redescend vers la droite](../../../assets/coque/v4-coquille-avant.png)
+**C'est cette version qui a été imprimée.** Elle sort propre, elle se ferme,
+et la carte n'entre pas.
 
-## Les sept mesures à prendre
+![La coquille avant v4 imprimée en blanc, posée à côté de la sonde capacitive v1.2 : le logement, la jupe et le col de cygne sont conformes au modèle](../../../assets/photos/o1-13-coque-v4-imprimee.jpg)
 
-À relever au pied à coulisse sur une sonde réelle, puis à reporter en tête de
-`hardware/coque/coque.scad`.
+### v5 — la cote relevée, et l'ergot rond
+
+Deux corrections, l'une de position, l'autre de forme.
+
+**La position.** `enc_y` passe de 34,0 à **19,4 mm**. C'est le seul défaut qui
+empêchait l'encastrement, et c'était le bon soupçon : la v4 posait les ergots
+15 mm trop bas, la carte s'appuyait dessus.
+
+**La forme.** L'encoche n'est pas un rectangle mais un **demi-cercle** de
+3,55 mm de diamètre. L'ergot rectangulaire de la v4 (3,4 × 1,2 mm) n'y serait
+pas entré de toute façon : à 1,7 mm du centre, l'arc ne creuse plus que 0,6 mm,
+et les coins de l'ergot auraient buté dessus.
+
+```text
+        encoche ⌀3,55            ergot ⌀2,4
+   ────────╮      ╭───────    ────────╮  ╭───────
+           ╰──────╯                   ╰──╯
+   la v4 y mettait un rectangle 3,4 × 1,2 :
+   ────────╮ ┌────┐ ╭───────   les coins portent
+           ╰─┴────┴─╯          sur l'arc, ça bloque
+```
+
+L'ergot est donc un **cylindre**, centré sur le chant de la carte, et
+**délibérément plus petit que l'encoche** : cette différence de rayon —
+1,775 − 1,2 = **0,575 mm** — *est* la tolérance de montage sur `enc_y`. Un
+ergot au diamètre exact n'entrerait qu'à la cote parfaite. Celui-ci accepte
+un demi-millimètre d'erreur, et le débattement vertical qu'il concède reste
+sous le jeu de 0,8 mm de l'épaulement, qui prend le relais.
+
+Un petit cône en tête sert de guide à la pose.
+
+![Rendu de la coquille avant en v5 : le logement du PCB avec les deux ergots cylindriques sur les parois, la jupe évasée, et le col de cygne](../../../assets/coque/v5-coquille-avant.png)
+
+**Vérifié par banc d'essai**, `just coque-test`, qui intersecte les ergots avec
+une carte factice percée de ses encoches :
+
+```console
+$ just coque-test
+  ok    décalage     0 mm : libre
+  ok    décalage   0.5 mm : libre
+  ok    décalage  -0.5 mm : libre
+  ok    décalage   0.6 mm : bute
+  ok    décalage  -0.6 mm : bute
+  ok    décalage   1.5 mm : bute
+  ok    décalage  -1.5 mm : bute
+ergots OK
+```
+
+La bascule tombe exactement sur les 0,575 mm calculés. C'est ce test qui
+aurait dû tourner avant la première impression : le modèle se rendait, il
+n'était pas pour autant montable.
+
+## Le relevé qui a tranché
+
+La sonde photographiée **à côté d'un réglet**, dans le même plan qu'elle : le
+réglet est gradué au demi-millimètre, ce qui donne un étalon à ~20,3 pixels par
+millimètre dans la zone utile, et une mesure qui ne dépend plus d'un objet posé
+plus loin.
+
+![La partie haute de la sonde v1.2 posée sur un réglet en acier, encoche demi-circulaire visible sur le chant, graduations 6 à 12 cm lisibles](../../../assets/photos/o1-10-encoches-reglet.jpg)
+
+| Repère | Distance au bord haut du PCB |
+|---|---|
+| Début de l'encoche, côté connecteur | 17,2 mm *(lecture directe au réglet : 18)* |
+| Fin de l'encoche | 20,7 mm |
+| **Centre de l'encoche → `enc_y`** | **18,9 mm** *(le modèle disait 34,0)* |
+| Diamètre de l'encoche | 3,55 mm |
+| Largeur du PCB → `pcb_w` | 22,6 mm, soit 23,0 nominal **confirmé** |
+| Trait blanc de sérigraphie | 24,7 mm |
+
+Les deux relevés indépendants de `enc_y` — 18,95 par la photo, 19,8 en partant
+de la lecture directe — s'écartent de 0,85 mm. **La valeur retenue, 19,4, est à
+moins de 0,45 mm de chacun**, donc dans la tolérance de 0,575 mm de l'ergot :
+les deux hypothèses passent, il n'y a pas à arbitrer entre elles pour imprimer.
+
+:::note[La question du `pcb_in` est tranchée]
+On se demandait si ces encoches marquaient la **profondeur d'enfoncement
+maximale** — auquel cas la coque aurait dû s'arrêter pile dessus. À 19 mm du
+bord haut, c'est exclu : ce serait enterrer la carte jusqu'au connecteur. Le
+candidat sérieux est le trait blanc à 24,7 mm, qui reste lui aussi bien
+au-dessus du bas de la coque. **`pcb_in` garde ses 48 mm.**
+:::
+
+## Les cotes restantes
+
+À confirmer au pied à coulisse, puis à reporter en tête de
+`hardware/coque/coque.scad`. Aucune n'est bloquante : ce sont des jeux, plus des
+positions.
 
 | Variable | Ce que c'est | Valeur actuelle | Statut |
 |---|---|---|---|
-| `pcb_w` | largeur du PCB | 23,0 mm | à confirmer |
+| `enc_y` | bord haut du PCB → centre des encoches | 19,4 mm | ✅ relevé |
+| `pcb_w` | largeur du PCB | 23,0 mm | ✅ confirmé |
+| `enc_diam` | diamètre de l'encoche demi-circulaire | 3,55 mm | mesuré sur photo |
 | `pcb_t` | épaisseur du PCB | 1,6 mm | à confirmer |
 | `conn_l` | longueur du connecteur le long du PCB | 8,7 mm | standard PH2.0-3P |
 | `conn_dh` | bord haut du PCB → haut du connecteur | 0 mm | à confirmer |
 | `conn_h` | hauteur du connecteur au-dessus du PCB | 5,75 mm | à confirmer |
-| **`enc_y`** | **bord haut du PCB → centre des encoches** | **34,0 mm** | ⚠️ **estimé au jugé** |
-| `enc_prof` | profondeur de l'encoche dans le chant, par côté | 1,5 mm | ⚠️ estimé |
-| `enc_long` | longueur de l'encoche le long de la carte | 4,0 mm | ⚠️ estimé |
 
-:::caution[`enc_y` est la cote qui pardonne le moins]
-C'est une position, pas un jeu. Fausse de plus d'un millimètre, la carte ne se
-pose pas à plat et la coquille refuse de fermer. Les autres cotes tolèrent
-l'approximation ; celle-ci non.
-:::
-
-:::danger[La valeur actuelle est probablement fausse de 13 mm]
-Mesurée sur la photo `o1-05` en prenant la pièce de 2 € comme étalon, l'encoche
-se situe à **19–21 mm** du bord haut du PCB. Le modèle utilise 34 mm.
-
-Cette estimation vaut ce que vaut une photogrammétrie sur photo de téléphone :
-la sonde y mesure 111 mm à l'échelle de la pièce alors que ces modules en font
-98, soit 13 % d'erreur de perspective, corrigée ici mais pas éliminée. Ce qui
-survit à l'incertitude, c'est l'**ordre de grandeur de l'écart** : une douzaine
-de millimètres, pas une fraction.
-
-**Ne pas lancer d'impression avant le relevé au pied à coulisse** — photo
-`o1-10` de la [liste des photos](/materiel/photos/#o1--une-sonde-une-valeur).
-C'est le seul chemin critique encore ouvert du projet.
-:::
-
-**Une question à trancher en même temps.** Ces encoches marquent souvent la
-**profondeur d'enfoncement maximale conseillée** de la sonde dans le sol. Si
-c'est le cas ici, la coque doit s'arrêter pile à ce niveau — il faudrait alors
-réduire `pcb_in` (48 mm actuellement) pour que le bas du boîtier tombe juste au
-repère, plutôt que 14 mm plus bas. À vérifier en même temps que les mesures.
-
-**Deux échappatoires** si le relevé tourne mal :
+**Deux échappatoires** si le montage résiste encore :
 
 - `encoches = false` redonne la v3, sans verrouillage par ergots ;
 - `butee = false` renonce à l'épaulement si le connecteur n'est pas orienté
