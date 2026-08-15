@@ -44,29 +44,45 @@
 //  34 mm, il vaut ~19 mm. Les ergots tombaient 15 mm trop bas
 //  et la carte reposait dessus au lieu de s'asseoir.
 //
-//  Releve sur photo au reglet (graduations au 1/2 mm servant
-//  d'etalon) + lecture directe au reglet :
-//    encoche : debut a 17,2 mm du bord haut (lecture directe
-//              du bord : 18 mm), fin a 20,7 mm, diametre 3,55
-//    PCB     : 22,6 mm de large -> 23,0 nominal confirme
-//    trait blanc de serigraphie a 24,7 mm du bord haut
+//  Comment les cotes ont ete obtenues, parce que la methode
+//  compte ici plus que les chiffres :
 //
-//  Les deux releves de enc_y (18,95 par la photo, 19,8 par la
-//  lecture directe) s'ecartent de 0,85 mm. La valeur retenue,
-//  19,4, est a moins de 0,45 mm de chacun — et l'ergot rond
-//  tolere 0,57 mm (voir ergot_r). Les deux hypotheses passent.
+//  Mesurer les pixels contre les graduations du reglet donne
+//  une echelle FAUSSE de 5 %. La carte est plus haut dans le
+//  cadre que les graduations qui servent d'etalon, donc plus
+//  loin de l'objectif, donc plus petite. Les 17,2 mm sortis
+//  ainsi contredisaient la lecture directe (18) — et l'ecart
+//  grandissait avec la distance, signature d'une erreur
+//  d'echelle et non de lecture.
+//
+//  La parade est de ne mesurer que des RAPPORTS. Le coin haut,
+//  l'encoche et le trait blanc de serigraphie sont alignes sur
+//  le meme chant : quelle que soit l'echelle, elle leur est
+//  commune et se simplifie. Un seul etalon absolu suffit, et
+//  c'est une lecture directe au reglet : trait blanc a 26 mm.
+//
+//    encoche : debut 18,0 - centre 19,9 - fin 21,8, diam 3,77
+//    PCB     : 23,0 mm de large, confirme
+//
+//  Verifie sur deux cadrages independants (o1-10 et o1-14),
+//  qui s'accordent a 0,1 mm pres. Et le « debut » ainsi calcule
+//  retombe sur les 18 mm lus directement au reglet, alors que
+//  rien dans le calcul ne l'y forcait.
 //
 //  RESTE A CONFIRMER AU PIED A COULISSE :
-//    enc_diam   diametre de l'encoche (3,55 vient de la photo)
+//    enc_diam   diametre de l'encoche (3,77 vient des photos)
 //    pcb_t      epaisseur du PCB
 //    conn_dh    bord haut du PCB -> haut du connecteur
 //    conn_h     hauteur du connecteur au-dessus du PCB
 //
-//  L'encoche n'est PAS le repere d'enfoncement maximal : a
-//  19 mm du bord haut, elle est trop pres du connecteur pour
-//  ca. Le trait blanc a 24,7 mm est le candidat serieux, et il
-//  reste lui aussi bien au-dessus du bas de la coque. pcb_in
-//  n'a donc pas a etre reduit.
+//  ATTENTION, QUESTION OUVERTE SUR pcb_in :
+//  le trait blanc a 26 mm est la limite d'immersion de la
+//  carte, et sous lui il n'y a plus que l'electrode. La coque
+//  engage 48 mm, soit 22 mm en dessous de ce trait : elle
+//  limite l'enfoncement a 50 mm d'electrode dans le sol la ou
+//  la carte en autorise 72. Reduire pcb_in a ~30 rendrait ces
+//  22 mm — au prix d'une refonte des proportions (H, vis_pos,
+//  jupe, col). Decision a prendre avant la prochaine impression.
 // =========================================================
 
 /* [Piece a exporter] */
@@ -88,10 +104,10 @@ butee   = true;    // epaulement de blocage sous le connecteur
 
 /* [Encoches laterales du PCB] */
 encoches = true;   // ergots venant se loger dans les 2 encoches
-enc_y    = 19.4;   // bord HAUT du PCB -> centre des encoches
-enc_diam = 3.55;   // diametre de l'encoche demi-circulaire     <<< A CONFIRMER
+enc_y    = 19.9;   // bord HAUT du PCB -> centre des encoches
+enc_diam = 3.77;   // diametre de l'encoche demi-circulaire     <<< A CONFIRMER
 // Rayon de l'ergot, volontairement plus petit que celui de
-// l'encoche : la difference (enc_diam/2 - ergot_r = 0,57 mm)
+// l'encoche : la difference (enc_diam/2 - ergot_r = 0,69 mm)
 // EST la tolerance de montage sur enc_y. Un ergot au diametre
 // exact de l'encoche n'entrerait qu'a la cote parfaite ; celui-ci
 // entre a 0,5 mm pres, et 0,57 mm de debattement vertical reste

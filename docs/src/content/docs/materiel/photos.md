@@ -120,19 +120,28 @@ bloquantes pour l'impression.
 
 | # | Photo | Pourquoi |
 |---|---|---|
-| `o1-10` ✅ | Gros plan sur les **deux encoches latérales**, avec un réglet dans le même plan que la carte | A donné `enc_y` à 19 mm quand le modèle en disait 34 — [le relevé](/materiel/coque-des-sondes/#le-relevé-qui-a-tranché) |
+| `o1-10` ✅ | Gros plan sur les **deux encoches latérales**, avec un réglet dans le même plan que la carte | A donné `enc_y` à 19,9 mm quand le modèle en disait 34 — [le relevé](/materiel/coque-des-sondes/#le-relevé-qui-a-tranché) |
 | `o1-11` | Le connecteur PH2.0 vu de côté, réglet ou pied à coulisse dans le cadre | `conn_l`, `conn_dh`, `conn_h` |
 | `o1-12` | La sonde à plat sur du papier millimétré | Permet de recontrôler toutes les cotes après coup |
 | `o1-13` ✅ | La coque imprimée posée à côté de la sonde, à plat | L'état de la v4, celle qui ne se montait pas |
+| `o1-14` ✅ | Le même relevé, **cadrage serré** | Un second cadrage confirme le premier à 0,1 mm : une seule photo ne se contredit jamais toute seule |
 
 La `o1-12` est celle qui rattrape les oublis : avec une photo nette sur papier
 millimétré, on peut reprendre n'importe quelle mesure sans ressortir la sonde.
 
-:::tip[Un réglet dans le plan de l'objet vaut mieux qu'une pièce de monnaie à côté]
-La `o1-05` posait une pièce de 2 € près de la sonde : l'étalon était bon, mais
-la perspective ajoutait 13 % d'erreur et l'encoche n'était localisée qu'à 2 mm
-près. La `o1-10`, sonde **posée sur** le réglet, donne les graduations et
-l'objet à la même distance de l'objectif — et la même cote au dixième.
+:::tip[Photographier un étalon ne suffit pas : il faut une cote lue à la main]
+La `o1-05` posait une pièce de 2 € près de la sonde. La `o1-10` met la sonde
+**sur** le réglet, ce qui est mieux — mais compter les pixels entre les
+graduations donne encore 5 % d'erreur, parce que la carte est plus haut dans le
+cadre que les graduations, donc plus loin de l'objectif.
+
+Ce qui a sauvé le relevé, c'est **une seule cote lue directement au réglet**
+(26 mm) : elle sert d'étalon absolu, et la photo ne fournit plus que des
+rapports entre repères alignés, où l'échelle se simplifie. Détail complet dans
+[le relevé de la coque](/materiel/coque-des-sondes/#le-relevé-qui-a-tranché).
+
+En pratique : sur une photo de mesure, **note aussi une cote au réglet dans le
+message qui l'accompagne**. Sans elle, la photo ne vaut qu'un ordre de grandeur.
 :::
 
 ## O2 — Multiplexage
