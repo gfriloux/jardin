@@ -153,7 +153,8 @@ Repéré, non commandé, à décider quand le besoin sera confirmé par une mesu
 | Boîtier IP65 + presse-étoupes | O7 | |
 | Batterie LiFePO₄ + panneau + MPPT | O6 | |
 | Filament PETG ou ASA | O7 | Pour la [coque des sondes](/materiel/coque-des-sondes/). Pas de PLA |
-| Vis M3×12 inox (4 par coque) | O7 | |
+| Vis M3×8 tête fraisée inox (4 par coque) | O7 | Fraisées, pas cylindriques : la coquille arrière ne fait que 3,2 mm |
+| Écrou M3 inox (4 par coque) | O7 | Noyés dans le plan de joint de la coquille avant |
 | Silicone **neutre** | O7 | Surtout pas acétique : il corrode le cuivre |
 | Vernis PCB ou résine époxy | O1 / O7 | À appliquer **avant toute mise en terre**, même pour un test court |
-| Pied à coulisse | O1 | Sept cotes de la coque restent à relever |
+| Pied à coulisse | O1 | Trois cotes de la coque restent à confirmer, aucune bloquante |

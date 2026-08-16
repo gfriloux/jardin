@@ -4,7 +4,7 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: v5 à réimprimer
+    text: v6 à imprimer
     variant: caution
 ---
 
@@ -18,13 +18,16 @@ $ just coque-test       # banc d'essai des ergots
 $ just coque-preview    # ouvre le modèle
 ```
 
-:::caution[La v4 a été imprimée, la carte n'entrait pas]
-La pièce sort propre, mais `enc_y` — la position des ergots le long de la carte
-— était estimée à 34 mm alors qu'elle vaut **20 mm**. Les ergots tombaient
-14 mm trop bas, la carte reposait dessus au lieu de s'asseoir dedans.
+:::note[Où en est la pièce]
+La **v4** a été imprimée : elle sortait propre, la carte n'entrait pas — `enc_y`
+était estimée à 34 mm alors qu'elle vaut **20**. La **v5** a corrigé la cote, a
+été imprimée à son tour, et **la carte s'encastre**.
 
-La cote est maintenant relevée, et la v5 la corrige. Voir [le relevé qui
-a tranché](#le-relevé-qui-a-tranché).
+Le montage sur table a alors montré ce que la coque ratait une fois fermée :
+pas de languette sur la coquille arrière, pas de logement d'écrou ni de tête de
+vis, deux vis passant dans la carte et quatre perçages traversant la coque de
+part en part. C'est ce que reprend la **v6**, qui reste à imprimer — voir
+[fermer la coque](#v6--fermer-la-coque).
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -170,8 +173,6 @@ qui prend le relais.
 
 Un petit cône en tête sert de guide à la pose.
 
-![Rendu de la coquille avant en v5 : le logement du PCB avec les deux ergots cylindriques sur les parois, la jupe évasée, et le col de cygne](../../../assets/coque/v5-coquille-avant.png)
-
 **Vérifié par banc d'essai**, `just coque-test`, qui intersecte les ergots avec
 une carte factice percée de ses encoches :
 
@@ -190,6 +191,93 @@ ergots OK
 La bascule tombe exactement sur les 0,8 mm calculés. C'est ce test qui
 aurait dû tourner avant la première impression : le modèle se rendait, il
 n'était pas pour autant montable.
+
+**Et la v5 a été imprimée : la carte s'encastre.**
+
+![La sonde v1.2 posée dans la coquille avant v5 imprimée, les deux ergots engagés dans les encoches latérales](../../../assets/photos/o1-15-carte-encastree.jpg)
+
+Et avec le câble branché, le col de cygne fait ce qu'on lui demandait depuis la
+v2 : le connecteur reste à l'intérieur, le câble se couche dans le conduit sans
+rien à enfiler, et il ressort par le bas.
+
+![La même sonde encastrée, câble PH2.0 branché et couché dans le col de cygne, ressortant vers le bas](../../../assets/photos/o1-16-carte-encastree-cablee.jpg)
+
+### v6 — fermer la coque
+
+L'encastrement réglé, le montage de la v5 sur la table montre trois défauts
+qui ne se voyaient pas tant que la carte n'entrait pas.
+
+**La coquille arrière était un couvercle plat.** L'avant portait une gorge à
+silicone, l'arrière rien : les deux pièces ne s'emboîtaient pas, elles se
+posaient l'une sur l'autre. La v6 met une **languette** sur l'arrière, qui
+entre dans la **rainure** de l'avant.
+
+```text
+   coquille arrière        ██  languette 0,6 × 0,6
+   ───────────────────────█  █──────────────────
+   ═══════════════════════╡  ╞══════════════════  plan de joint
+   ───────────────────╮  ╭─╮  ╭─╮  ╭─────────────
+   coquille avant     ╰──╯ ╰──╯ ╰──╯  rainure 1,0 × 0,9
+                        ↑         ↑
+                   0,2 de jeu par côté, 0,3 de fond :
+                   c'est là que le silicone se loge,
+                   contenu de trois côtés au lieu
+                   d'être écrasé entre deux plats.
+```
+
+**Les vis n'avaient ni logement de tête ni logement d'écrou.** La v6 noie un
+**écrou M3 dans un logement hexagonal borgne** creusé dans le plan de joint de
+la coquille avant, et **fraise la tête de vis** dans la coquille arrière. La
+visserie passe en **M3×8 à tête fraisée**.
+
+L'épaisseur de la coquille arrière passe de 2,4 à **3,2 mm** au passage : une
+fraisure à 90° mange déjà 1,4 mm, et il faut de la matière dessous.
+
+**Et surtout, les perçages ne traversent plus.** C'est le défaut que personne
+ne cherchait :
+
+:::danger[Les quatre avant-trous de la v5 perçaient la coque de part en part]
+Ils allaient de z = −1 à 12,4 pour 11,4 mm d'épaisseur, et débouchaient sur la
+face **extérieure**, *à l'intérieur* du cordon de joint. Quatre canaux qui
+menaient l'eau droit dans le volume qu'on cherchait à étancher — dans une pièce
+dont c'est l'unique raison d'exister.
+
+Le logement d'écrou est **borgne** : hexagone sur 2,6 mm, dégagement de 4 mm
+pour la pointe de vis, et 4,8 mm de matière pleine en dessous. Plus rien ne
+relie l'extérieur à l'intérieur.
+:::
+
+**Enfin, deux vis passaient dans la carte.** Elles étaient à x = ±9, y = 46,5 ;
+la carte fait 23 de large et monte à y = 48. Sur la photo ci-dessus on ne voit
+que deux trous de vis — les deux autres sont sous la carte. Les vis du haut
+passent donc sur des oreilles comme celles du bas, et les oreilles grandissent
+de 10 à 12 mm parce qu'un logement d'écrou tient plus de place qu'un avant-trou
+et doit rester en dedans de la rainure.
+
+![Rendu de la coquille avant en v6 : le logement du PCB avec ses deux ergots, la rainure de joint qui suit tout le contour, et les quatre logements hexagonaux d'écrou sur les oreilles](../../../assets/coque/v6-coquille-avant.png)
+
+![Rendu de la coquille arrière en v6 : la languette qui suit le contour et les quatre perçages fraisés](../../../assets/coque/v6-coquille-arriere.png)
+
+**Le banc d'essai gagne trois contrôles**, un par défaut :
+
+```console
+$ just coque-test
+ergots contre la carte
+  ok    décalage 0 mm                                  libre
+  …
+le reste de la coque
+  ok    aucune vis ne traverse la carte                libre
+  ok    aucune cavité ne débouche dehors               libre
+  ok    la languette entre dans la rainure             libre
+coque OK
+```
+
+:::tip[Un test qui n'a jamais échoué ne prouve rien]
+Les trois ont été validés en **réintroduisant le défaut** : vis remises à
+x = ±9, dégagement d'écrou allongé jusqu'à percer, languette élargie au-delà de
+la rainure. Chaque fois le contrôle passe au rouge. Un contrôle qu'on n'a jamais
+vu échouer peut très bien ne rien mesurer du tout.
+:::
 
 ## Le relevé qui a tranché
 
@@ -300,20 +388,27 @@ positions.
 
 ## Impression et montage
 
-**Impression.** Chaque coquille à plat, face extérieure sur le plateau, **zéro
-support** — toute la géométrie, col de cygne compris, est une extrusion d'un
-profil 2D. Trois périmètres.
+**Impression.** Chaque coquille à plat, **face extérieure sur le plateau**,
+**zéro support**. L'orientation n'est pas indifférente : c'est elle qui rend la
+fraisure de la tête de vis imprimable, le trou se resserrant en montant, ce qui
+ne fait qu'un surplomb à 45°. Trois périmètres.
 
 **Matière : PETG ou ASA. Pas de PLA**, il se délite en extérieur au bout d'une
 saison.
 
+**Quincaillerie :** 4 vis **M3×8 à tête fraisée** inox et 4 **écrous M3** inox.
+Pas de M3×12 : la vis ne traverse plus la coquille avant, elle s'arrête dans
+l'écrou noyé au plan de joint.
+
 **Montage :**
 
-1. cordon de silicone **neutre** dans la gorge du plan de joint ;
-2. PCB posé dans la coquille avant, encoches en face des ergots ;
-3. câble couché dans le col de cygne, connecteur PH2.0 à l'intérieur ;
-4. 4 vis M3×12 inox ;
-5. **boucle d'égouttage** sur le câble sous la sortie, pour que l'eau ne
+1. un **écrou M3 pressé** dans chacun des quatre logements hexagonaux de la
+   coquille avant ;
+2. cordon de silicone **neutre** dans la rainure du plan de joint ;
+3. PCB posé dans la coquille avant, encoches en face des ergots ;
+4. câble couché dans le col de cygne, connecteur PH2.0 à l'intérieur ;
+5. coquille arrière posée, **languette dans la rainure**, puis les 4 vis ;
+6. **boucle d'égouttage** sur le câble sous la sortie, pour que l'eau ne
    descende pas le long du fil.
 
 :::caution[Silicone neutre, jamais acétique]

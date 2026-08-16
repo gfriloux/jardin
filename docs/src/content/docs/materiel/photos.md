@@ -130,6 +130,8 @@ bloquantes pour l'impression.
 | `o1-12` | La sonde à plat sur du papier millimétré | Permet de recontrôler toutes les cotes après coup |
 | `o1-13` ✅ | La coque imprimée posée à côté de la sonde, à plat | L'état de la v4, celle qui ne se montait pas |
 | `o1-14` ✅ | Le même relevé, **cadrage serré** | Un second cadrage confirme le premier à 0,1 mm : une seule photo ne se contredit jamais toute seule |
+| `o1-15` ✅ | La carte **encastrée** dans la coquille avant v5 | La preuve que les ergots tombent en face des encoches. Montre aussi que deux vis manquent à l'appel : elles sont sous la carte |
+| `o1-16` ✅ | La même, **câble branché** et couché dans le col de cygne | Le col fait ce qu'on lui demandait depuis la v2 : rien à enfiler, sortie vers le bas |
 
 La `o1-12` est celle qui rattrape les oublis : avec une photo nette sur papier
 millimétré, on peut reprendre n'importe quelle mesure sans ressortir la sonde.
