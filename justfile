@@ -220,6 +220,8 @@ coque-test:
     verdict libre "$(rendu interference-vis)"   "aucune vis ne traverse la carte"
     verdict libre "$(rendu interference-peau)"  "aucune cavité ne débouche dehors"
     verdict libre "$(rendu interference-joint)" "la languette entre dans la rainure"
+    verdict libre "$(rendu interference-soudures)" "les soudures ne touchent pas l'arrière"
+    verdict libre "$(rendu integrite-languette)"  "le dégagement ne coupe pas la languette"
     verdict libre "$(rendu interference-retournement)" \
                                                 "la pièce imprimée se retourne"
 

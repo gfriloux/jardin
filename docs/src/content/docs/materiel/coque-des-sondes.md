@@ -4,7 +4,7 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: v7 à imprimer
+    text: v8 à imprimer
     variant: caution
 ---
 
@@ -14,7 +14,7 @@ conception produit un boîtier imprimable en 3D — paramétrique, versionné da
 
 ```console
 $ just coque-stl        # génère les deux coquilles
-$ just coque-test       # banc d'essai : ergots, visserie, joint, retournement
+$ just coque-test       # banc d'essai : sept contrôles, un par défaut rencontré
 $ just coque-preview    # ouvre le modèle
 ```
 
@@ -31,9 +31,14 @@ part en part. C'est ce qu'a repris la **v6** — voir
 
 La v6 a été imprimée à son tour, et sa coquille arrière sortait inutilisable :
 elle était posée sur l'avant par un miroir là où il fallait une rotation, si
-bien qu'**aucun mouvement physique** ne l'amenait à sa place. La **v7** corrige
-ça et reste à imprimer — voir [une coquille arrière qu'on peut
+bien qu'**aucun mouvement physique** ne l'amenait à sa place — c'est la **v7**
+qui corrige ça, voir [une coquille arrière qu'on peut
 retourner](#v7--une-coquille-arrière-quon-peut-retourner).
+
+La sonde en main a enfin montré ce qu'aucune vue ne disait : le connecteur est
+traversant, et ses **trois soudures dépassent de 2 mm au dos de la carte**,
+exactement là où le couvercle vient. La **v8** les dégage et reste à imprimer —
+voir [les soudures du connecteur](#v8--les-soudures-du-connecteur).
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -311,8 +316,6 @@ z = 0 est le plan de joint, la languette descend dedans — et c'est l'export qu
 la retourne, par une vraie rotation. La pièce sort donc du modèle déjà à plat,
 face extérieure vers le plateau.
 
-![Rendu de la coquille arrière telle qu'elle est exportée, prête à imprimer : la languette en relief sur la face du dessus, les quatre perçages fraisés côté plateau](../../../assets/coque/coquille-arriere.png)
-
 Elle paraît retournée par rapport à la coquille avant, et c'est normal : c'est
 une pièce qu'on pose face contre face.
 
@@ -343,6 +346,49 @@ calculé par `tools/volume-stl.py`, avec un seuil à 0,001 mm³ — un cube de
   ok    décalage 1.5 mm                                bute, 2.144491 mm3
   ok    la pièce imprimée se retourne                  libre
 ```
+
+### v8 — les soudures du connecteur
+
+Le connecteur est **traversant** : ses trois soudures dépassent au **dos** de la
+carte, côté coquille arrière, qui les rencontrait de plein fouet. Rien dans le
+modèle ne représentait la carte autrement que comme une plaque lisse — c'est une
+chose qu'on ne voit qu'en tenant la sonde.
+
+Relevé : **2,0 mm** de haut, en rang de trois au pas de **2,54 mm** (un pas au
+pouce, pas les 2,0 d'un PH2.0), à 4,5 mm sous le bord haut de la carte.
+
+**Ce qu'il faut dégager n'est pas 2 mm.** La carte s'assoit déjà 0,3 mm sous le
+plan de joint, parce que son logement est creusé d'autant en plus. La saillie
+réelle au-dessus du joint n'est donc que de 1,7 mm, et la poche fait 2,0 mm avec
+son jeu.
+
+```text
+                   ██ ██ ██  soudures, 2,0
+   ┌──────────────┐  │  │  │ ┌──────────────
+   │  coquille    └──┴──┴──┴─┘   poche 2,0
+   │  arrière                    fond 2,4 = paroi
+   ╞══════════════════════════════════ plan de joint
+   │  ▓▓▓▓▓▓▓▓▓ carte, assise 0,3 dessous
+```
+
+**L'épaisseur de la coquille arrière en découle**, au lieu d'être posée à la
+main : `ep_ar = paroi + deg_p`, soit **4,4 mm**. Le fond sous la poche fait alors
+2,4 mm — l'épaisseur de paroi de toute la pièce. C'est +1,2 mm et non les +2 mm
+qu'on pourrait croire, et la visserie reste en **M3×8** : 4,4 de coquille plus
+2,4 d'écrou laissent encore 1,2 mm de pointe dans le dégagement.
+
+La poche est **large et peu profonde** — 12 × 12 mm pour un rang de 5 : sa
+position exacte compte peu, un rang de 5 dans une poche de 12 tolère 3 mm
+d'erreur. Sa profondeur, elle, se discute au dixième, parce que son fond est la
+seule paroi à cet endroit.
+
+![Rendu de la coquille arrière telle qu'elle est exportée, prête à imprimer : la languette en relief sur le pourtour, la poche de dégagement des soudures, et les quatre perçages fraisés côté plateau](../../../assets/coque/coquille-arriere.png)
+
+**Deux contrôles de plus.** Le premier vérifie que les soudures ne touchent pas
+le couvercle — sans la poche, 19,34 mm³ de soudure sont enfouis dans le
+plastique. Le second est un garde-fou : la poche passe à 7 mm de l'anneau de
+joint, et l'élargir la ferait **couper la languette en deux** sans que rien
+d'autre ne s'en aperçoive.
 
 ## Le relevé qui a tranché
 

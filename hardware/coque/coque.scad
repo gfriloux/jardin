@@ -3,9 +3,11 @@
 //  (DollaTek, ASIN B07L2RV1D2 - PCB 98 x 23 x 1.6 mm,
 //   connecteur PH2.0 3 broches en haut)
 //
-//  VERSION 4 : deux coquilles vissees, sortie de cable en
-//  col de cygne (U inverse, bouche vers le bas), et ergots
-//  venant se loger dans les 2 encoches laterales du PCB.
+//  VERSION 8 : deux coquilles vissees par ecrous noyes, joint
+//  rainure + languette, sortie de cable en col de cygne (U
+//  inverse, bouche vers le bas), ergots ronds dans les 2
+//  encoches laterales du PCB, et degagement des soudures du
+//  connecteur au dos de la carte.
 //
 //  ---------------------------------------------------------
 //  CONTRAINTE FONDAMENTALE, a ne jamais perdre de vue :
@@ -99,7 +101,7 @@
 // =========================================================
 
 /* [Piece a exporter] */
-piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint","interference-retournement"]
+piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint","interference-soudures","integrite-languette","interference-retournement"]
 
 // Banc d'essai : decalage de la carte factice le long de son axe,
 // en mm, pour la piece "interference". A 0 la carte doit se poser
@@ -109,6 +111,9 @@ essai = 0;
 /* [Capteur] */
 pcb_w   = 23.0;    // largeur du PCB
 pcb_t   = 1.6;     // epaisseur du PCB
+pcb_enf = 0.3;     // le logement est creuse de 0,3 de plus que la carte :
+                   // elle s'assoit donc 0,3 SOUS le plan de joint. Cette
+                   // cote se retranche de la saillie des soudures.
 pcb_in  = 48.0;    // hauteur de PCB engagee dans la coque
 conn_l  = 8.7;     // longueur du connecteur PH2.0-3P (le long du PCB)
 conn_dh = 0.0;     // distance bord haut du PCB -> haut du connecteur
@@ -140,9 +145,6 @@ Wb      = 30.0;    // largeur du corps
 r_coin  = 3.0;
 paroi   = 2.4;
 ep_av   = 11.4;    // epaisseur de la coquille avant
-ep_ar   = 3.2;     // epaisseur de la coquille arriere
-                   // 3,2 et non 2,4 : il faut de la matiere sous la
-                   // fraisure de la tete de vis, qui mange deja 1,4 mm.
 
 prof_conn = 9.0;   // profondeur de la cavite connecteur
 prof_comp = 3.5;   // profondeur de la cavite composants
@@ -159,6 +161,33 @@ tube_ext   = 12.0;  // diametre exterieur du conduit
 tube_bore  = 7.2;   // diametre interieur (passage du cable)
 y_haut     = 56.0;  // altitude de l'axe de la boucle
 y_bouche   = 40.0;  // altitude de la bouche de sortie
+
+/* [Soudures du connecteur, au dos de la carte] */
+// Le connecteur est traversant : ses trois soudures depassent au DOS
+// du PCB, cote coquille arriere, qui les rencontrait de plein fouet.
+//
+// La carte s'asseyant deja pcb_enf (0,3) sous le plan de joint, la
+// saillie reelle au-dessus du joint n'est que soudure_h - pcb_enf.
+// C'est ce qu'il faut degager, pas les 2 mm bruts.
+soudure_h   = 2.0;    // hauteur des soudures au-dessus du dos  <<< MESURE
+soudure_y   = 43.5;   // rang des soudures : 4,5 mm sous le bord haut
+                      // du PCB, releve sur o1-14 par rapport d'image
+soudure_pas = 2.54;   // pas du rang (pas 2,0 : c'est un pas au pouce)
+soudure_d   = 2.2;    // diametre d'une bille de soudure, estime
+soudure_jeu = 0.3;    // jeu au-dessus des soudures
+
+// Etendue du degagement : large, parce que sa position exacte compte
+// peu et qu'un rang de 5 mm dans une poche de 12 tolere 3 mm d'erreur.
+// Profond juste ce qu'il faut, parce que son fond est la seule paroi
+// a cet endroit.
+deg_l = 12.0;
+deg_p = soudure_h - pcb_enf + soudure_jeu;
+
+// L'epaisseur de la coquille arriere en decoule, au lieu d'etre posee
+// a la main : le fond du degagement fait alors `paroi`, comme partout
+// ailleurs dans la piece. Le compte tombe a 4,4 mm, ce qui laisse de
+// quoi loger la fraisure de tete (1,4) et garde la vis en M3x8.
+ep_ar = paroi + deg_p;
 
 /* [Joint : rainure et languette] */
 // La coquille avant porte une RAINURE sur son plan de joint, la
@@ -247,6 +276,9 @@ module p_anneau(larg) {
 module p_rainure()   { p_anneau(rainure_l); }
 module p_languette() { p_anneau(languette_l); }
 
+module p_soudures() { translate([-deg_l/2, soudure_y - deg_l/2])
+                          square([deg_l, deg_l]); }
+
 // ---------------- pieces 3D --------------------------------
 
 // Ergots ronds, centres sur le chant du PCB. La moitie interieure
@@ -255,9 +287,9 @@ module p_languette() { p_anneau(languette_l); }
 // Le petit cone du haut sert de guide a la pose.
 module ergots() {
     h_cyl = pcb_t * 0.9;               // fut droit, sur l'epaisseur utile
-    h_cne = pcb_t + 0.3 - h_cyl;       // guide, jusqu'au plan de joint
+    h_cne = pcb_t + pcb_enf - h_cyl;   // guide, jusqu'au plan de joint
     for (s = [-1, 1])
-        translate([s * pcb_w/2, pcb_in - enc_y, ep_av - (pcb_t + 0.3)]) {
+        translate([s * pcb_w/2, pcb_in - enc_y, ep_av - (pcb_t + pcb_enf)]) {
             cylinder(r = ergot_r, h = h_cyl);
             translate([0, 0, h_cyl])
                 cylinder(r1 = ergot_r, r2 = ergot_r - 0.5, h = h_cne);
@@ -292,7 +324,7 @@ module ecrou_logements() {
 module avant_cavites() {
     translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conn();
     translate([0,0,ep_av - prof_comp]) linear_extrude(prof_comp + 1) p_comp();
-    translate([0,0,ep_av - (pcb_t + 0.3)]) linear_extrude(pcb_t + 1.3) p_pcb();
+    translate([0,0,ep_av - (pcb_t + pcb_enf)]) linear_extrude(pcb_t + 1 + pcb_enf) p_pcb();
     translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conduit();
     translate([0,0,ep_av - rainure_p]) linear_extrude(rainure_p + 1) p_rainure();
     ecrou_logements();
@@ -336,6 +368,9 @@ module coque_arriere() {
             translate([0, 0, -languette_h])
                 linear_extrude(languette_h) p_languette();
         }
+        // degagement des soudures du connecteur, creuse depuis le plan
+        // de joint
+        translate([0, 0, -1]) linear_extrude(deg_p + 1) p_soudures();
         for (p = vis_pos) translate([p[0], p[1], 0]) {
             translate([0, 0, -languette_h - 1])
                 cylinder(d = vis_d, h = ep_ar + languette_h + 2);
@@ -361,16 +396,26 @@ module arriere_a_plat() {
     translate([0, 0, ep_ar]) rotate([180, 0, 0]) coque_arriere();
 }
 
+// Les trois soudures du connecteur, au dos de la carte. Elles font
+// partie du banc d'essai au meme titre que la carte : c'est contre
+// elles que la coquille arriere venait taper.
+module soudures_factices() {
+    color("silver")
+    for (i = [-1, 0, 1])
+        translate([i * soudure_pas, soudure_y, ep_av - pcb_enf])
+            cylinder(d = soudure_d, h = soudure_h);
+}
+
 // Carte factice, encoches comprises : c'est elle qui sert de banc
 // d'essai. `just coque-test` intersecte les ergots avec elle et
 // echoue si le volume commun n'est pas nul.
 module pcb_factice() {
     color("green")
     difference() {
-        translate([-pcb_w/2, -50, ep_av - pcb_t - 0.3])
+        translate([-pcb_w/2, -50, ep_av - pcb_t - pcb_enf])
             cube([pcb_w, 98, pcb_t]);
         for (s = [-1, 1])
-            translate([s * pcb_w/2, pcb_in - enc_y, ep_av - pcb_t - 1.3])
+            translate([s * pcb_w/2, pcb_in - enc_y, ep_av - pcb_t - pcb_enf - 1])
                 cylinder(d = enc_diam, h = pcb_t + 2);
     }
 }
@@ -385,7 +430,7 @@ if (piece == "pose") {
 }
 if (piece == "assemblage") {
     coque_avant();
-    translate([0, essai, 0]) pcb_factice();
+    translate([0, essai, 0]) { pcb_factice(); soudures_factices(); }
     arriere_en_place();
 }
 
@@ -414,7 +459,20 @@ if (piece == "interference-peau")
 if (piece == "interference-joint")
     intersection() { coque_avant(); arriere_en_place(); }
 
-// 5. La piece EXPORTEE se retourne-t-elle sur la coquille avant ?
+// 5. Les soudures du connecteur touchent-elles la coquille arriere ?
+if (piece == "interference-soudures")
+    intersection() { arriere_en_place(); soudures_factices(); }
+
+// 6. Le degagement des soudures mord-il la languette ? Il est large a
+//    dessein, et il passe a 7 mm de l'anneau de joint : l'elargir encore
+//    couperait le joint en deux sans que rien d'autre ne s'en apercoive.
+if (piece == "integrite-languette")
+    intersection() {
+        translate([0, 0, -1]) linear_extrude(deg_p + 1) p_soudures();
+        translate([0, 0, -languette_h]) linear_extrude(languette_h) p_languette();
+    }
+
+// 7. La piece EXPORTEE se retourne-t-elle sur la coquille avant ?
 //    On prend la coquille arriere telle qu'elle sort du slicer, on la
 //    retourne par une rotation — le geste des doigts — et on demande
 //    qu'elle retombe exactement sur sa pose d'assemblage. Un miroir
