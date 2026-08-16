@@ -158,41 +158,60 @@ coque-stl:
 coque-preview:
     openscad hardware/coque/coque.scad
 
-# Banc d'essai des ergots : la carte factice doit se poser libre à la cote
-# nominale, et buter sur les ergots dès qu'on la décale le long de son axe.
-# C'est ce test qui aurait dû tourner avant la première impression : le modèle
-# se rendait, la carte n'entrait pas.
+# Banc d'essai de la coque. Chaque contrôle rend un volume qui doit être vide,
+# et chacun correspond à un défaut réellement rencontré :
+#   - les ergots tombaient 14 mm trop bas et la carte n'entrait pas (v4) ;
+#   - deux vis passaient en plein dans la carte (v5) ;
+#   - quatre perçages traversaient la coquille avant jusqu'à la face
+#     extérieure, à l'intérieur du cordon de joint (v5) ;
+#   - la coquille arrière n'avait pas de languette pour entrer dans la rainure.
 coque-test:
     #!/usr/bin/env bash
     set -euo pipefail
     tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
     echec=0
-    # décalage:attendu — "libre" = aucun volume commun, "bute" = contact
-    for cas in 0:libre 0.7:libre -0.7:libre 0.9:bute -0.9:bute 1.5:bute -1.5:bute; do
-      d=${cas%:*}; attendu=${cas#*:}
+
+    # Rend une pièce et dit "libre" (aucun volume commun) ou "bute" (contact).
+    #
+    # Volume nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le dit sur
+    # stderr. Il faut lire ce message, sinon une erreur de syntaxe passerait
+    # pour un montage qui tombe juste.
+    rendu() {
       rm -f "$tmp/i.stl"
-      # Volume commun nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le
-      # dit sur stderr. Il faut lire ce message, sinon une vraie erreur de
-      # syntaxe passerait pour un montage qui tombe juste.
-      err=$(openscad -o "$tmp/i.stl" -D 'piece="interference"' -D "essai=$d" \
+      local err
+      err=$(openscad -o "$tmp/i.stl" -D "piece=\"$1\"" ${2:+-D} ${2:-} \
             hardware/coque/coque.scad 2>&1 >/dev/null || true)
       if [ -s "$tmp/i.stl" ] && grep -q '^ *facet' "$tmp/i.stl"; then
-        obtenu=bute
+        echo bute
       elif printf '%s' "$err" | grep -q 'top level object is empty'; then
-        obtenu=libre
+        echo libre
       else
         printf '%s\n' "$err" >&2
         echo "openscad n'a produit ni volume ni « objet vide »" >&2
         exit 1
       fi
-      if [ "$obtenu" = "$attendu" ]; then
-        printf '  ok    décalage %+5s mm : %s\n' "$d" "$obtenu"
-      else
-        printf '  ÉCHEC décalage %+5s mm : %s, attendu %s\n' "$d" "$obtenu" "$attendu"
-        echec=1
-      fi
+    }
+    verdict() {  # attendu, obtenu, libellé
+      # `printf %-46s` compte les octets, pas les caractères : les libellés
+      # accentués se retrouveraient décalés. On calcule le remplissage sur
+      # la longueur en caractères, que ${#…} donne en locale UTF-8.
+      local pad; pad=$(printf '%*s' $(( 46 - ${#3} )) '')
+      if [ "$1" = "$2" ]; then printf '  ok    %s%s %s\n' "$3" "$pad" "$2"
+      else printf '  ÉCHEC %s%s %s, attendu %s\n' "$3" "$pad" "$2" "$1"; echec=1; fi
+    }
+
+    echo "ergots contre la carte"
+    for cas in 0:libre 0.7:libre -0.7:libre 0.9:bute -0.9:bute 1.5:bute -1.5:bute; do
+      d=${cas%:*}
+      verdict "${cas#*:}" "$(rendu interference "essai=$d")" "décalage $d mm"
     done
-    [ $echec -eq 0 ] && echo "ergots OK" || (echo "les ergots ne tiennent pas la carte" >&2; exit 1)
+
+    echo "le reste de la coque"
+    verdict libre "$(rendu interference-vis)"   "aucune vis ne traverse la carte"
+    verdict libre "$(rendu interference-peau)"  "aucune cavité ne débouche dehors"
+    verdict libre "$(rendu interference-joint)" "la languette entre dans la rainure"
+
+    [ $echec -eq 0 ] && echo "coque OK" || (echo "la coque ne se monte pas" >&2; exit 1)
 
 # Supprime les STL générés.
 coque-clean:

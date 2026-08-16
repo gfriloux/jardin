@@ -31,10 +31,12 @@
 //  le plateau, sans supports. PETG ou ASA (PAS de PLA, il se
 //  delite en exterieur au bout d'une saison), 3 perimetres.
 //
-//  Montage : joint silicone NEUTRE (pas acetique, il corrode
-//  le cuivre) dans la gorge du plan de joint, PCB pose dans
-//  la coquille avant, cable couche dans le col, puis 4 vis
-//  M3x12 inox (avant-trou 2.5).
+//  Montage : 4 ecrous M3 presses dans les logements hexagonaux
+//  du plan de joint, joint silicone NEUTRE (pas acetique, il
+//  corrode le cuivre) dans la rainure, PCB pose dans la
+//  coquille avant, cable couche dans le col, coquille arriere
+//  posee languette dans la rainure, puis 4 vis M3x8 a tete
+//  fraisee inox.
 //
 //  =========================================================
 //  ETAT DES COTES  (v5, apres la premiere impression d'essai)
@@ -97,7 +99,7 @@
 // =========================================================
 
 /* [Piece a exporter] */
-piece = "avant";   // ["avant","arriere","pose","assemblage","interference"]
+piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint"]
 
 // Banc d'essai : decalage de la carte factice le long de son axe,
 // en mm, pour la piece "interference". A 0 la carte doit se poser
@@ -138,7 +140,9 @@ Wb      = 30.0;    // largeur du corps
 r_coin  = 3.0;
 paroi   = 2.4;
 ep_av   = 11.4;    // epaisseur de la coquille avant
-ep_ar   = 2.4;     // epaisseur de la coquille arriere
+ep_ar   = 3.2;     // epaisseur de la coquille arriere
+                   // 3,2 et non 2,4 : il faut de la matiere sous la
+                   // fraisure de la tete de vis, qui mange deja 1,4 mm.
 
 prof_conn = 9.0;   // profondeur de la cavite connecteur
 prof_comp = 3.5;   // profondeur de la cavite composants
@@ -156,11 +160,37 @@ tube_bore  = 7.2;   // diametre interieur (passage du cable)
 y_haut     = 56.0;  // altitude de l'axe de la boucle
 y_bouche   = 40.0;  // altitude de la bouche de sortie
 
+/* [Joint : rainure et languette] */
+// La coquille avant porte une RAINURE sur son plan de joint, la
+// coquille arriere une LANGUETTE qui vient dedans. Les deux
+// s'emboitent, et le silicone occupe le jeu qui reste : il est
+// contenu de trois cotes au lieu d'etre ecrase entre deux plats.
+joint_axe  = 1.25;  // retrait de l'axe du joint / contour exterieur
+rainure_l  = 1.0;   // largeur de la rainure
+rainure_p  = 0.9;   // profondeur de la rainure
+languette_l= 0.6;   // largeur de la languette (0,2 de jeu par cote)
+languette_h= 0.6;   // hauteur (0,3 de fond libre pour le silicone)
+
 /* [Visserie] */
-vis_pilote = 2.5;   // avant-trou (vis M3 autotaraudeuse)
-vis_passage= 3.4;   // percage traversant coquille arriere
-vis_pos    = [[-15,8],[15,8],[-9,46.5],[9,46.5]];
-oreille_d  = 10.0;
+// Vis M3x8 a TETE FRAISEE, ecrou M3 noye dans le plan de joint.
+//
+// Rien ne traverse la coquille avant. C'est le point important :
+// jusqu'a la v5 les quatre avant-trous debouchaient sur la face
+// exterieure, a l'interieur du cordon de joint — quatre canaux qui
+// menaient l'eau droit dans le volume qu'on cherche a etancher.
+vis_d      = 3.4;   // percage de passage
+vis_tete_d = 6.2;   // diametre de la fraisure (tete DIN 965 : 6,0)
+ecrou_plat = 5.7;   // entre plats du logement (ecrou M3 : 5,5)
+ecrou_ep   = 2.6;   // profondeur du logement (ecrou M3 : 2,4)
+ecrou_deg  = 4.0;   // degagement sous l'ecrou, pour la pointe de vis
+
+// Les deux vis du haut etaient a x=+-9, y=46,5 : en plein dans la
+// carte, qui va jusqu'a y=48 et fait 23 de large. Elles passent sur
+// des oreilles, comme celles du bas. Et les oreilles grandissent
+// (10 -> 12) parce qu'un logement d'ecrou tient plus de place qu'un
+// avant-trou : il faut qu'il reste en dedans de la rainure.
+vis_pos    = [[-16,8],[16,8],[-16,44],[16,44]];
+oreille_d  = 12.0;
 
 $fn = 64;
 
@@ -205,7 +235,17 @@ module p_comp() { translate([-larg_comp/2, 4])
 y_butee = butee ? pcb_in - conn_dh - conn_l - 0.8 : 4;
 module p_conn() { translate([-(conn_l + 1.4)/2, y_butee])
                       square([conn_l + 1.4, H + 1 - y_butee]); }
-module p_gorge() { difference() { offset(delta=-0.7) p_ext(); offset(delta=-1.8) p_ext(); } }
+// Rainure et languette : deux anneaux concentriques suivant le contour,
+// centres sur le meme axe. La languette est plus etroite et moins haute,
+// et cette difference est le volume ou le silicone se loge.
+module p_anneau(larg) {
+    difference() {
+        offset(delta = -(joint_axe - larg/2)) p_ext();
+        offset(delta = -(joint_axe + larg/2)) p_ext();
+    }
+}
+module p_rainure()   { p_anneau(rainure_l); }
+module p_languette() { p_anneau(languette_l); }
 
 // ---------------- pieces 3D --------------------------------
 
@@ -224,27 +264,72 @@ module ergots() {
         }
 }
 
+// Futs des vis, traversant l'assemblage. Sert au montage comme au
+// banc d'essai : c'est ce volume qu'on intersecte avec la carte pour
+// verifier qu'aucune vis ne lui passe au travers.
+module vis_futs() {
+    for (p = vis_pos)
+        translate([p[0], p[1], ep_av - ecrou_ep - ecrou_deg])
+            cylinder(d = vis_d, h = ecrou_deg + ecrou_ep + ep_ar + 1);
+}
+
+// Logement d'ecrou : hexagone BORGNE creuse dans le plan de joint,
+// prolonge d'un degagement pour la pointe de la vis. Tourne de 30
+// degres pour presenter un plat — et non une pointe — au logement du
+// PCB, ce qui gagne 0,4 mm de matiere du bon cote.
+module ecrou_logements() {
+    for (p = vis_pos) translate([p[0], p[1], ep_av - ecrou_ep]) {
+        rotate([0, 0, 30])
+            cylinder(d = ecrou_plat / cos(30), h = ecrou_ep + 1, $fn = 6);
+        translate([0, 0, -ecrou_deg])
+            cylinder(d = vis_d, h = ecrou_deg + 0.1);
+    }
+}
+
+// Tout ce qui est retire a la coquille avant, en un seul module :
+// le banc d'essai l'intersecte avec la peau exterieure pour prouver
+// qu'aucune cavite ne debouche dehors.
+module avant_cavites() {
+    translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conn();
+    translate([0,0,ep_av - prof_comp]) linear_extrude(prof_comp + 1) p_comp();
+    translate([0,0,ep_av - (pcb_t + 0.3)]) linear_extrude(pcb_t + 1.3) p_pcb();
+    translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conduit();
+    translate([0,0,ep_av - rainure_p]) linear_extrude(rainure_p + 1) p_rainure();
+    ecrou_logements();
+}
+
 module coque_avant() {
     if (encoches) ergots();
     difference() {
         linear_extrude(ep_av) p_ext();
-        translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conn();
-        translate([0,0,ep_av - prof_comp]) linear_extrude(prof_comp + 1) p_comp();
-        translate([0,0,ep_av - (pcb_t + 0.3)]) linear_extrude(pcb_t + 1.3) p_pcb();
-        translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conduit();
-        for (p = vis_pos) translate([p[0], p[1], -1])
-            cylinder(d = vis_pilote, h = ep_av + 2);
-        // gorge a silicone sur le plan de joint
-        translate([0, 0, ep_av - 0.8]) linear_extrude(1.8) p_gorge();
+        avant_cavites();
     }
 }
 
 module coque_arriere() {
     difference() {
-        linear_extrude(ep_ar) p_ext();
-        for (p = vis_pos) translate([p[0], p[1], -1])
-            cylinder(d = vis_passage, h = ep_ar + 2);
+        union() {
+            linear_extrude(ep_ar) p_ext();
+            // languette, sur la face qui regarde la coquille avant
+            translate([0, 0, ep_ar]) linear_extrude(languette_h) p_languette();
+        }
+        for (p = vis_pos) translate([p[0], p[1], 0]) {
+            translate([0, 0, -1])
+                cylinder(d = vis_d, h = ep_ar + languette_h + 2);
+            // Fraisure a 90 deg, ouverte sur la face EXTERIEURE (z=0).
+            // Elle s'imprime sans support : le trou se resserre en
+            // montant, ce qui fait un surplomb a 45 degres.
+            translate([0, 0, -0.01])
+                cylinder(d1 = vis_tete_d, d2 = vis_d,
+                         h = (vis_tete_d - vis_d) / 2 + 0.01);
+        }
     }
+}
+
+// Coquille arriere posee sur la coquille avant, plans de joint au
+// contact : la languette doit alors etre entierement dans la rainure.
+module arriere_en_place() {
+    translate([0, 0, ep_av + ep_ar]) mirror([0,0,1]) coque_arriere();
 }
 
 // Carte factice, encoches comprises : c'est elle qui sert de banc
@@ -272,7 +357,30 @@ if (piece == "pose") {
 if (piece == "assemblage") {
     coque_avant();
     translate([0, essai, 0]) pcb_factice();
-    translate([0, 0, ep_av + ep_ar + 0.2]) mirror([0,0,1]) coque_arriere();
+    arriere_en_place();
 }
+
+// ---------------- banc d'essai -----------------------------
+// Quatre volumes qui doivent tous etre VIDES. `just coque-test`
+// les rend un par un et echoue des que l'un n'est pas nul.
+
+// 1. Les ergots touchent-ils la carte a la cote nominale ?
 if (piece == "interference")
     intersection() { ergots(); translate([0, essai, 0]) pcb_factice(); }
+
+// 2. Une vis passe-t-elle dans la carte ? C'etait le cas des deux
+//    vis du haut jusqu'a la v5, et rien ne le disait.
+if (piece == "interference-vis")
+    intersection() { vis_futs(); pcb_factice(); }
+
+// 3. Une cavite de la coquille avant debouche-t-elle sur la face
+//    exterieure ? Si oui, l'eau a un chemin vers l'electronique.
+if (piece == "interference-peau")
+    intersection() {
+        avant_cavites();
+        linear_extrude(0.6) p_ext();   // la peau, cote plateau
+    }
+
+// 4. La languette entre-t-elle dans la rainure sans forcer ?
+if (piece == "interference-joint")
+    intersection() { coque_avant(); arriere_en_place(); }
