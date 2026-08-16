@@ -99,7 +99,7 @@
 // =========================================================
 
 /* [Piece a exporter] */
-piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint"]
+piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint","interference-retournement"]
 
 // Banc d'essai : decalage de la carte factice le long de son axe,
 // en mm, pour la piece "interference". A 0 la carte doit se poser
@@ -306,30 +306,59 @@ module coque_avant() {
     }
 }
 
+// ---------------------------------------------------------------
+//  MIROIR N'EST PAS RETOURNEMENT — l'erreur de la v6
+//
+//  La coquille arriere etait dessinee dans son repere d'impression
+//  puis posee sur l'avant par mirror([0,0,1]). Dans la vue
+//  d'assemblage tout tombait juste, et le banc d'essai validait.
+//  Mais un miroir n'est pas un mouvement : on ne retourne pas une
+//  piece reelle par une symetrie, seulement par une ROTATION, qui
+//  inverse aussi y. Le contour n'etant symetrique ni en x ni en y
+//  — col d'un cote, jupe de l'autre —, la piece imprimee ne pouvait
+//  atteindre sa pose d'assemblage par aucun mouvement physique.
+//
+//  Posee dans le sens ou le contour coincide, la languette et les
+//  fraisures pointaient toutes les deux du mauvais cote.
+//
+//  La coquille arriere est donc dessinee ici dans le repere de
+//  L'ASSEMBLAGE — z=0 est le plan de joint, z=ep_ar la face
+//  exterieure — et c'est l'export qui la retourne, par une vraie
+//  rotation. Voir la piece "interference-retournement".
+// ---------------------------------------------------------------
 module coque_arriere() {
+    fraisure_h = (vis_tete_d - vis_d) / 2;
     difference() {
         union() {
             linear_extrude(ep_ar) p_ext();
-            // languette, sur la face qui regarde la coquille avant
-            translate([0, 0, ep_ar]) linear_extrude(languette_h) p_languette();
+            // languette : elle descend sous le plan de joint, dans la
+            // rainure de la coquille avant
+            translate([0, 0, -languette_h])
+                linear_extrude(languette_h) p_languette();
         }
         for (p = vis_pos) translate([p[0], p[1], 0]) {
-            translate([0, 0, -1])
+            translate([0, 0, -languette_h - 1])
                 cylinder(d = vis_d, h = ep_ar + languette_h + 2);
-            // Fraisure a 90 deg, ouverte sur la face EXTERIEURE (z=0).
-            // Elle s'imprime sans support : le trou se resserre en
-            // montant, ce qui fait un surplomb a 45 degres.
-            translate([0, 0, -0.01])
-                cylinder(d1 = vis_tete_d, d2 = vis_d,
-                         h = (vis_tete_d - vis_d) / 2 + 0.01);
+            // Fraisure a 90 deg, ouverte sur la face EXTERIEURE.
+            // A l'impression, face exterieure sur le plateau, le trou
+            // se resserre en montant : un surplomb a 45 degres, donc
+            // aucun support.
+            translate([0, 0, ep_ar - fraisure_h])
+                cylinder(d1 = vis_d, d2 = vis_tete_d, h = fraisure_h + 0.01);
         }
     }
 }
 
-// Coquille arriere posee sur la coquille avant, plans de joint au
-// contact : la languette doit alors etre entierement dans la rainure.
-module arriere_en_place() {
-    translate([0, 0, ep_av + ep_ar]) mirror([0,0,1]) coque_arriere();
+// Posee sur la coquille avant, plans de joint au contact : la
+// languette doit alors etre entierement dans la rainure. Aucun
+// miroir, juste une translation.
+module arriere_en_place() { translate([0, 0, ep_av]) coque_arriere(); }
+
+// La meme, retournee pour l'impression, face exterieure sur le
+// plateau. rotate et non mirror : c'est le geste qu'on fera avec
+// les doigts.
+module arriere_a_plat() {
+    translate([0, 0, ep_ar]) rotate([180, 0, 0]) coque_arriere();
 }
 
 // Carte factice, encoches comprises : c'est elle qui sert de banc
@@ -347,7 +376,7 @@ module pcb_factice() {
 }
 
 if (piece == "avant")   coque_avant();
-if (piece == "arriere") coque_arriere();
+if (piece == "arriere") arriere_a_plat();
 // Coquille avant + carte posee dedans, coquille arriere otee : la vue
 // qui montre si l'ergot tombe dans l'encoche.
 if (piece == "pose") {
@@ -384,3 +413,19 @@ if (piece == "interference-peau")
 // 4. La languette entre-t-elle dans la rainure sans forcer ?
 if (piece == "interference-joint")
     intersection() { coque_avant(); arriere_en_place(); }
+
+// 5. La piece EXPORTEE se retourne-t-elle sur la coquille avant ?
+//    On prend la coquille arriere telle qu'elle sort du slicer, on la
+//    retourne par une rotation — le geste des doigts — et on demande
+//    qu'elle retombe exactement sur sa pose d'assemblage. Un miroir
+//    glisse dans la chaine et les deux volumes cessent de coincider :
+//    c'est le seul controle qui aurait attrape le defaut de la v6, ou
+//    la vue d'assemblage etait juste et la piece imprimee inutilisable.
+module arriere_retournee() {
+    translate([0, 0, ep_av + ep_ar]) rotate([180, 0, 0]) arriere_a_plat();
+}
+if (piece == "interference-retournement")
+    union() {
+        difference() { arriere_retournee(); arriere_en_place(); }
+        difference() { arriere_en_place(); arriere_retournee(); }
+    }

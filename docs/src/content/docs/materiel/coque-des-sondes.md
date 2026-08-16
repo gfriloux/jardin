@@ -4,7 +4,7 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: v6 à imprimer
+    text: v7 à imprimer
     variant: caution
 ---
 
@@ -14,7 +14,7 @@ conception produit un boîtier imprimable en 3D — paramétrique, versionné da
 
 ```console
 $ just coque-stl        # génère les deux coquilles
-$ just coque-test       # banc d'essai des ergots
+$ just coque-test       # banc d'essai : ergots, visserie, joint, retournement
 $ just coque-preview    # ouvre le modèle
 ```
 
@@ -26,8 +26,14 @@ La **v4** a été imprimée : elle sortait propre, la carte n'entrait pas — `e
 Le montage sur table a alors montré ce que la coque ratait une fois fermée :
 pas de languette sur la coquille arrière, pas de logement d'écrou ni de tête de
 vis, deux vis passant dans la carte et quatre perçages traversant la coque de
-part en part. C'est ce que reprend la **v6**, qui reste à imprimer — voir
+part en part. C'est ce qu'a repris la **v6** — voir
 [fermer la coque](#v6--fermer-la-coque).
+
+La v6 a été imprimée à son tour, et sa coquille arrière sortait inutilisable :
+elle était posée sur l'avant par un miroir là où il fallait une rotation, si
+bien qu'**aucun mouvement physique** ne l'amenait à sa place. La **v7** corrige
+ça et reste à imprimer — voir [une coquille arrière qu'on peut
+retourner](#v7--une-coquille-arrière-quon-peut-retourner).
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -254,9 +260,7 @@ passent donc sur des oreilles comme celles du bas, et les oreilles grandissent
 de 10 à 12 mm parce qu'un logement d'écrou tient plus de place qu'un avant-trou
 et doit rester en dedans de la rainure.
 
-![Rendu de la coquille avant en v6 : le logement du PCB avec ses deux ergots, la rainure de joint qui suit tout le contour, et les quatre logements hexagonaux d'écrou sur les oreilles](../../../assets/coque/v6-coquille-avant.png)
-
-![Rendu de la coquille arrière en v6 : la languette qui suit le contour et les quatre perçages fraisés](../../../assets/coque/v6-coquille-arriere.png)
+![Rendu de la coquille avant : le logement du PCB avec ses deux ergots, la rainure de joint qui suit tout le contour, et les quatre logements hexagonaux d'écrou sur les oreilles](../../../assets/coque/coquille-avant.png)
 
 **Le banc d'essai gagne trois contrôles**, un par défaut :
 
@@ -278,6 +282,67 @@ x = ±9, dégagement d'écrou allongé jusqu'à percer, languette élargie au-de
 la rainure. Chaque fois le contrôle passe au rouge. Un contrôle qu'on n'a jamais
 vu échouer peut très bien ne rien mesurer du tout.
 :::
+
+### v7 — une coquille arrière qu'on peut retourner
+
+La v6 a été imprimée. La coquille arrière était **inutilisable** : languette et
+fraisures toutes les deux du mauvais côté.
+
+Et pourtant la vue d'assemblage était juste, et les quatre contrôles passaient.
+Le défaut n'était pas dans la pièce, il était dans le **geste qui l'amène à sa
+place**.
+
+Le modèle posait la coquille arrière sur l'avant par un `mirror([0,0,1])`.
+
+:::danger[Un miroir n'est pas un retournement]
+On ne retourne pas une pièce réelle par une symétrie, seulement par une
+**rotation** — et une rotation de 180° inverse *deux* axes, pas un seul. Le
+contour de la coque n'étant symétrique ni en x ni en y — col d'un côté, jupe de
+l'autre — la pièce exportée ne pouvait atteindre sa pose d'assemblage par aucun
+mouvement physique.
+
+Posée dans le sens où le contour coïncide, les deux features pointent du
+mauvais côté. Retournée pour les remettre du bon côté, le contour ne coïncide
+plus. Aucune des deux positions ne ferme la coque.
+:::
+
+La coquille arrière est maintenant dessinée dans le repère de **l'assemblage** —
+z = 0 est le plan de joint, la languette descend dedans — et c'est l'export qui
+la retourne, par une vraie rotation. La pièce sort donc du modèle déjà à plat,
+face extérieure vers le plateau.
+
+![Rendu de la coquille arrière telle qu'elle est exportée, prête à imprimer : la languette en relief sur la face du dessus, les quatre perçages fraisés côté plateau](../../../assets/coque/coquille-arriere.png)
+
+Elle paraît retournée par rapport à la coquille avant, et c'est normal : c'est
+une pièce qu'on pose face contre face.
+
+#### Le contrôle qui manquait
+
+Aucun des quatre contrôles ne pouvait attraper ça : ils comparaient le modèle à
+lui-même, avec le même miroir des deux côtés. Le cinquième prend la pièce
+**telle qu'elle sort du slicer**, la retourne par une rotation — le geste des
+doigts — et exige qu'elle retombe exactement sur sa pose d'assemblage.
+
+| | Volume de non-recouvrement |
+|---|---|
+| avec le miroir de la v6 | **15 532 mm³** — la pièce entière |
+| avec la rotation de la v7 | 0,000000 mm³ |
+
+#### Et un test qui mentait
+
+En l'écrivant, il a d'abord annoncé un défaut là où il n'y en avait pas :
+6472 triangles rendus par CGAL, pour un volume de **0,000000 mm³**. Soustraire
+deux solides aux frontières confondues produit un maillage bavard et creux.
+
+Le banc jugeait sur « le fichier existe ». Il juge maintenant sur le **volume**,
+calculé par `tools/volume-stl.py`, avec un seuil à 0,001 mm³ — un cube de
+0,1 mm de côté. Ça rend au passage les verdicts quantitatifs :
+
+```console
+  ok    décalage 0.9 mm                                bute, 0.145150 mm3
+  ok    décalage 1.5 mm                                bute, 2.144491 mm3
+  ok    la pièce imprimée se retourne                  libre
+```
 
 ## Le relevé qui a tranché
 

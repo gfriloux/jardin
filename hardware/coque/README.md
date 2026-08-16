@@ -13,7 +13,7 @@ $ just coque-preview      # ouvre le modèle dans OpenSCAD
 
 ## ⚠️ Avant d'imprimer
 
-**Passe `just coque-test`.** Quatre contrôles, un par défaut déjà rencontré :
+**Passe `just coque-test`.** Cinq contrôles, un par défaut déjà rencontré :
 
 | Contrôle | Le défaut qu'il attrape |
 |---|---|
@@ -21,9 +21,14 @@ $ just coque-preview      # ouvre le modèle dans OpenSCAD
 | aucune vis ne traverse la carte | v5 : deux vis tombaient en plein dans le PCB |
 | aucune cavité ne débouche dehors | v5 : quatre perçages traversaient la coque, à l'intérieur du joint |
 | la languette entre dans la rainure | v5 : la coquille arrière était un couvercle plat |
+| la pièce imprimée se retourne | v6 : posée par un miroir, la coquille arrière n'atteignait sa pose par aucun mouvement réel |
 
-Les trois derniers ont été validés en **réintroduisant le défaut** : un contrôle
-qu'on n'a jamais vu échouer peut très bien ne rien mesurer.
+Tous ont été validés en **réintroduisant le défaut** : un contrôle qu'on n'a
+jamais vu échouer peut très bien ne rien mesurer.
+
+Le verdict se prend sur le **volume** (`tools/volume-stl.py`, seuil 0,001 mm³),
+pas sur l'existence du fichier : soustraire deux solides aux frontières
+confondues rend un maillage de milliers de triangles pour un volume nul.
 
 Cotes encore à confirmer au pied à coulisse : `pcb_t`, `conn_dh`, `conn_h`.
 Aucune n'est bloquante — ce sont des jeux, pas des positions. La liste est dans

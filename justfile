@@ -173,16 +173,25 @@ coque-test:
 
     # Rend une pièce et dit "libre" (aucun volume commun) ou "bute" (contact).
     #
-    # Volume nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le dit sur
-    # stderr. Il faut lire ce message, sinon une erreur de syntaxe passerait
-    # pour un montage qui tombe juste.
+    # Le verdict se prend sur le VOLUME, pas sur l'existence du fichier.
+    # Soustraire deux solides aux frontières confondues fait rendre à CGAL un
+    # maillage bavard — des milliers de triangles — dont le volume est nul :
+    # compter les facettes déclarerait un défaut là où il n'y en a pas.
+    #
+    # Volume franchement nul : OpenSCAD n'écrit aucun fichier, sort en 1 et le
+    # dit sur stderr. Il faut lire ce message, sinon une erreur de syntaxe
+    # passerait pour un montage qui tombe juste.
     rendu() {
       rm -f "$tmp/i.stl"
-      local err
+      local err v
       err=$(openscad -o "$tmp/i.stl" -D "piece=\"$1\"" ${2:+-D} ${2:-} \
             hardware/coque/coque.scad 2>&1 >/dev/null || true)
-      if [ -s "$tmp/i.stl" ] && grep -q '^ *facet' "$tmp/i.stl"; then
-        echo bute
+      if [ -s "$tmp/i.stl" ]; then
+        # 0,001 mm³ : un cube de 0,1 mm de côté. En dessous c'est du bruit de
+        # maillage, au-dessus c'est de la matière. L'outil sort en erreur
+        # quand le seuil est franchi — bash ne sait pas comparer des flottants.
+        if v=$(tools/volume-stl.py "$tmp/i.stl" 0.001); then echo libre
+        else echo "bute, $v mm3"; fi
       elif printf '%s' "$err" | grep -q 'top level object is empty'; then
         echo libre
       else
@@ -196,7 +205,8 @@ coque-test:
       # accentués se retrouveraient décalés. On calcule le remplissage sur
       # la longueur en caractères, que ${#…} donne en locale UTF-8.
       local pad; pad=$(printf '%*s' $(( 46 - ${#3} )) '')
-      if [ "$1" = "$2" ]; then printf '  ok    %s%s %s\n' "$3" "$pad" "$2"
+      local mot=${2%%,*}   # "bute, 1.84 mm3" -> "bute"
+      if [ "$1" = "$mot" ]; then printf '  ok    %s%s %s\n' "$3" "$pad" "$2"
       else printf '  ÉCHEC %s%s %s, attendu %s\n' "$3" "$pad" "$2" "$1"; echec=1; fi
     }
 
@@ -210,6 +220,8 @@ coque-test:
     verdict libre "$(rendu interference-vis)"   "aucune vis ne traverse la carte"
     verdict libre "$(rendu interference-peau)"  "aucune cavité ne débouche dehors"
     verdict libre "$(rendu interference-joint)" "la languette entre dans la rainure"
+    verdict libre "$(rendu interference-retournement)" \
+                                                "la pièce imprimée se retourne"
 
     [ $echec -eq 0 ] && echo "coque OK" || (echo "la coque ne se monte pas" >&2; exit 1)
 
