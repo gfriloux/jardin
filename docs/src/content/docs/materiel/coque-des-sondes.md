@@ -4,7 +4,7 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: v8 à imprimer
+    text: v9 à imprimer
     variant: caution
 ---
 
@@ -14,7 +14,7 @@ conception produit un boîtier imprimable en 3D — paramétrique, versionné da
 
 ```console
 $ just coque-stl        # génère les deux coquilles
-$ just coque-test       # banc d'essai : sept contrôles, un par défaut rencontré
+$ just coque-test       # banc d'essai : huit contrôles, un par défaut rencontré
 $ just coque-preview    # ouvre le modèle
 ```
 
@@ -37,8 +37,14 @@ retourner](#v7--une-coquille-arrière-quon-peut-retourner).
 
 La sonde en main a enfin montré ce qu'aucune vue ne disait : le connecteur est
 traversant, et ses **trois soudures dépassent de 2 mm au dos de la carte**,
-exactement là où le couvercle vient. La **v8** les dégage et reste à imprimer —
-voir [les soudures du connecteur](#v8--les-soudures-du-connecteur).
+exactement là où le couvercle vient. C'est la **v8** qui les dégage — voir
+[les soudures du connecteur](#v8--les-soudures-du-connecteur). Elle a été
+imprimée, et **les deux coquilles s'emboîtent**.
+
+La **v9**, à imprimer, rend au sol 18 mm d'électrode que la coque couvrait sans
+nécessité, et referme au passage les logements d'écrou du haut, qui ouvraient
+dans le conduit du câble depuis la v6 — voir [raccourcir la
+coque](#v9--raccourcir-la-coque).
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -51,19 +57,24 @@ sensibilité à presque rien — on obtiendrait une sonde parfaitement protégé
 parfaitement aveugle.
 
 ```text
-     ┌─────────┐
+     ┌─────────┐  0
      │ NE555   │  ← partie haute : régulateur, connecteur
      │ régul.  │     C'est CE qui tombe en panne dehors,
      │ PH2.0   │     et c'est ce que la coque protège
-     ├─────────┤       ← la coque s'arrête ici (45 mm)
+     ├·········┤  24,4  dernier composant
+     ├─────────┤  26,0  trait d'immersion
+     ├─────────┤  30,0  ← la coque s'arrête ici
      │         │
-     │ ÉLECTRODE│  ← surtout pas de plastique par-dessus
-     │         │
-     ╰────╮╭───╯
-          ││
+     │ÉLECTRODE│  ← surtout pas de plastique par-dessus,
+     │         │     et surtout pas de coque non plus :
+     │         │     chaque millimètre couvert est un
+     ╰────╮╭───╯     millimètre qui ne lit pas le sol
+          ││         98,0
 ```
 
-La coque couvre donc les **45 mm du haut**, et rien d'autre.
+La coque couvre donc les **30 mm du haut**, et rien d'autre. Ce n'est pas un
+chiffre choisi : c'est le trait d'immersion à 26,0 mm plus 4 mm de marge, et le
+modèle refuse de se rendre en dessous.
 
 ## Le cheminement de la conception
 
@@ -390,6 +401,66 @@ plastique. Le second est un garde-fou : la poche passe à 7 mm de l'anneau de
 joint, et l'élargir la ferait **couper la languette en deux** sans que rien
 d'autre ne s'en aperçoive.
 
+**Cette version a été imprimée, et les deux coquilles s'emboîtent.**
+
+### v9 — raccourcir la coque
+
+La coque engageait 48 mm de carte quand le dernier composant est à 24,4 mm du
+bord haut et le trait d'immersion à 26,0. Elle couvrait donc **22 mm
+d'électrode sans avoir à le faire** — et chaque millimètre couvert est un
+millimètre qui ne lit pas le sol.
+
+```text
+   bord haut ─┬─ 0
+              │   composants jusqu'à 24,4 ─┐
+   trait      ┼─ 26,0  immersion max       │ ce que la coque
+   lèvre v9   ┼─ 30,0  ←── nouveau bas     ┘ doit couvrir
+              │
+   lèvre v8   ┼─ 48,0  ←── ancien bas
+              │   18 mm rendus au sol
+              ┴─ 98,0  pointe
+```
+
+`pcb_in` passe de 48 à **30 mm** : la carte autorise 72 mm d'enfoncement, la
+coque en laissait 50, elle en laisse maintenant **68**.
+
+Le corps suit, de 52 à 34 mm, et avec lui le col de cygne et les vis hautes.
+Ces cotes sont désormais **dérivées** au lieu d'être posées à la main — `H =
+pcb_in + 4`, `y_haut = H + 4`, les vis à `H − 8` — sinon la prochaine révision
+en oublierait la moitié.
+
+Et deux garde-fous entrent dans le modèle, à la place d'un commentaire :
+
+```openscad
+assert(pcb_in >= trait_y + 2, "pcb_in laisse le trait d'immersion hors de la coque");
+assert(pcb_in >= compo_y + 2, "pcb_in laisse le dernier composant hors de la coque");
+```
+
+Raccourcir encore fait maintenant **échouer le rendu**, au lieu de sortir une
+pièce qui a l'air bonne.
+
+#### Un défaut que le raccourcissement a fait sortir
+
+En rapprochant les vis hautes du col de cygne, cette révision a révélé un
+défaut qui dormait **depuis la v6** :
+
+:::danger[Les logements d'écrou du haut ouvraient dans le conduit du câble]
+Le brin descendant du conduit tombait à x = 20, son perçage occupant la bande
+16,4 → 23,6. Les logements d'écrou du haut occupaient 13,65 → 19,35. **74 mm³
+de recouvrement** : le nid d'abeille n'était fermé que sur trois côtés, et
+l'écrou serait ressorti au premier serrage.
+
+Le chiffre est identique à `pcb_in = 48` — le défaut n'a rien à voir avec le
+raccourcissement, il était simplement invisible tant que rien ne le cherchait.
+:::
+
+La boucle passe de 10 à **12 mm de rayon** : le brin descend alors à x = 24, ce
+qui laisse 1 mm de paroi entre le conduit et l'écrou — et donne au câble un
+rayon de cintrage plus confortable. Le huitième contrôle vérifie qu'**aucun
+logement d'écrou n'ouvre dans une cavité**, quelle qu'elle soit.
+
+![Rendu de la coquille avant en v9 : corps raccourci, quatre logements hexagonaux d'écrou fermés, rainure de joint sur tout le contour et boucle du col élargie](../../../assets/coque/coquille-avant.png)
+
 ## Le relevé qui a tranché
 
 La sonde est photographiée **posée sur un réglet**, dans son plan. Mesurer les
@@ -454,24 +525,13 @@ Un rapport mesuré sur une image mesure les **longs écarts**, jamais les petits
 détails. Le grand écart calibre, le petit détail se mesure à la main.
 :::
 
-:::note[Le trait blanc rouvre la question du `pcb_in` — reportée à O7]
+:::note[Le trait blanc a fixé la hauteur de la coque]
 Ce trait est la **limite d'immersion** de la carte : en dessous, plus un seul
 composant, rien que l'électrode jusqu'à la pointe.
 
-Or la coque engage 48 mm, soit **22 mm sous ce trait**. Elle ne met pas
-l'électronique en danger — au contraire, elle protège bien au-delà de ce que la
-carte nue tolère. Mais elle **limite l'enfoncement à 50 mm d'électrode dans le
-sol** là où la carte en autorise 72 : on ne pousse la sonde que jusqu'à la lèvre
-de la coque.
-
-Descendre `pcb_in` à ~30 mm rendrait ces 22 mm, au prix d'une refonte des
-proportions (`H`, `vis_pos`, la jupe, le col).
-
-**Décision prise : on n'y touche pas maintenant.** La v5 corrige un seul défaut,
-et c'est ce qu'il faut pour savoir s'il est corrigé — changer la hauteur du
-boîtier en même temps rendrait le résultat illisible. La profondeur
-d'enfoncement est une question de sol, pas de modèle : elle se tranchera à
-[O7](/objectifs/o7-mise-au-jardin/#létanchéité), sur des mesures.
+C'est lui qui commande `pcb_in`. La coque descend à 30 mm, soit 4 mm sous le
+trait — assez pour tout couvrir, pas un millimètre de plus. Le modèle refuse
+désormais de se rendre si on descend en dessous.
 :::
 
 ## Les cotes restantes

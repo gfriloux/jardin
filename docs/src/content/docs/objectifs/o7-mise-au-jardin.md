@@ -84,18 +84,18 @@ terre. Deux voies, à départager ici :
   annonce septembre 2026, donc à anticiper de plusieurs semaines ;
 - garder les sondes génériques en les protégeant : la
   [coque imprimée en 3D](/materiel/coque-des-sondes/) est conçue, versionnée,
-  et sa v4 a déjà été imprimée — la v5 corrige le seul défaut qui empêchait
-  l'encastrement.
+  imprimée et **montée** — la carte s'encastre et les deux coquilles
+  s'emboîtent. Ce qui reste à prouver n'est plus la géométrie mais la tenue
+  dans la durée.
 
-**Une décision de conception attend ici.** La coque engage 48 mm de carte, soit
-22 mm sous la limite d'immersion : elle plafonne l'enfoncement à **50 mm
-d'électrode dans le sol** là où la carte en autorise 72. Descendre `pcb_in` à
-~30 mm rendrait ces 22 mm, au prix d'une refonte des proportions du boîtier.
+**Une décision de conception attendait ici, elle a été prise en amont.** La
+coque engageait 48 mm de carte, soit 22 mm sous la limite d'immersion, et
+plafonnait l'enfoncement à 50 mm d'électrode là où la carte en autorise 72.
+Elle descend maintenant à 30 mm et en laisse **68**.
 
-Le choix a été de **ne pas y toucher avant d'avoir validé l'encastrement**, et
-de trancher ici, sur des mesures de terrain : 50 mm de sonde en terre
-suffisent-ils à voir ce qu'on cherche, ou les valeurs suivent-elles trop la
-surface qui sèche ?
+Reste à vérifier au jardin ce qu'aucun calcul ne dira : 68 mm de sonde en terre
+suffisent-ils à voir ce qu'on cherche, ou les valeurs suivent-elles encore trop
+la surface qui sèche ?
 
 Dans les deux cas, le **vernissage de l'électrode et des chants** est
 indispensable : c'est par les tranches nues du PCB que l'humidité remonte.

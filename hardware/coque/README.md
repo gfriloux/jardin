@@ -13,7 +13,7 @@ $ just coque-preview      # ouvre le modèle dans OpenSCAD
 
 ## ⚠️ Avant d'imprimer
 
-**Passe `just coque-test`.** Sept contrôles, un par défaut déjà rencontré :
+**Passe `just coque-test`.** Huit contrôles, un par défaut déjà rencontré :
 
 | Contrôle | Le défaut qu'il attrape |
 |---|---|
@@ -24,6 +24,7 @@ $ just coque-preview      # ouvre le modèle dans OpenSCAD
 | la pièce imprimée se retourne | v6 : posée par un miroir, la coquille arrière n'atteignait sa pose par aucun mouvement réel |
 | les soudures ne touchent pas l'arrière | v7 : les 3 soudures du connecteur, 2 mm au dos de la carte, tapaient dans le couvercle |
 | le dégagement ne coupe pas la languette | garde-fou : la poche de dégagement passe à 7 mm de l'anneau de joint |
+| aucun écrou n'ouvre dans une cavité | v6 : le conduit du câble traversait les logements d'écrou du haut, 74 mm³ |
 
 Tous ont été validés en **réintroduisant le défaut** : un contrôle qu'on n'a
 jamais vu échouer peut très bien ne rien mesurer.

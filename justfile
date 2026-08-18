@@ -222,6 +222,7 @@ coque-test:
     verdict libre "$(rendu interference-joint)" "la languette entre dans la rainure"
     verdict libre "$(rendu interference-soudures)" "les soudures ne touchent pas l'arrière"
     verdict libre "$(rendu integrite-languette)"  "le dégagement ne coupe pas la languette"
+    verdict libre "$(rendu interference-ecrous)"  "aucun écrou n'ouvre dans une cavité"
     verdict libre "$(rendu interference-retournement)" \
                                                 "la pièce imprimée se retourne"
 

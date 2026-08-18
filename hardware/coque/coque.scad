@@ -85,23 +85,23 @@
 //    conn_dh    bord haut du PCB -> haut du connecteur
 //    conn_h     hauteur du connecteur au-dessus du PCB
 //
-//  pcb_in RESTE A 48, ET C'EST UN CHOIX :
-//  le trait blanc a 26 mm est la limite d'immersion de la
-//  carte, et sous lui il n'y a plus que l'electrode. La coque
-//  engage 48 mm, soit 22 mm en dessous de ce trait : elle
-//  limite l'enfoncement a 50 mm d'electrode dans le sol la ou
-//  la carte en autorise 72. Reduire pcb_in a ~30 rendrait ces
-//  22 mm, au prix d'une refonte des proportions (H, vis_pos,
-//  jupe, col).
+//  pcb_in EST DESCENDU DE 48 A 30, ET C'EST MESURE :
+//  le dernier composant est a 24,4 mm du bord haut, le trait
+//  d'immersion a 26,0. La coque n'a besoin de descendre qu'a
+//  30 pour tout couvrir avec 4 mm de marge. Elle couvrait
+//  22 mm d'electrode sans avoir a le faire, et chaque
+//  millimetre couvert est un millimetre qui ne lit pas le sol :
+//  la carte autorise 72 mm d'enfoncement, la coque en laissait
+//  50, elle en laisse 68.
 //
-//  On ne le fait pas maintenant : la v5 corrige un seul defaut,
-//  et changer la hauteur du boitier en meme temps rendrait le
-//  resultat de l'impression illisible. La profondeur utile est
-//  une question de sol, pas de modele — elle se tranche a O7.
+//  Les assert() plus bas refusent de rendre la piece si on
+//  descend encore. Reste a voir au jardin, a O7, si 68 mm de
+//  sonde en terre suffisent.
+//
 // =========================================================
 
 /* [Piece a exporter] */
-piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint","interference-soudures","integrite-languette","interference-retournement"]
+piece = "avant";   // ["avant","arriere","pose","assemblage","interference","interference-vis","interference-peau","interference-joint","interference-soudures","integrite-languette","interference-ecrous","interference-retournement"]
 
 // Banc d'essai : decalage de la carte factice le long de son axe,
 // en mm, pour la piece "interference". A 0 la carte doit se poser
@@ -114,7 +114,26 @@ pcb_t   = 1.6;     // epaisseur du PCB
 pcb_enf = 0.3;     // le logement est creuse de 0,3 de plus que la carte :
                    // elle s'assoit donc 0,3 SOUS le plan de joint. Cette
                    // cote se retranche de la saillie des soudures.
-pcb_in  = 48.0;    // hauteur de PCB engagee dans la coque
+// Hauteur de PCB engagee dans la coque. Elle est descendue de 48 a 30 :
+// le dernier composant est a 24,4 mm du bord haut et le trait d'immersion
+// a 26,0, donc 30 couvre tout avec 4 mm de marge. Les 18 mm rendus vont
+// dans le sol — la carte autorise 72 mm d'enfoncement, la coque en
+// laissait 50, elle en laisse maintenant 68.
+pcb_in  = 30.0;
+
+// Les deux reperes qui interdisent de descendre plus bas, releves sur la
+// carte et non choisis : sous eux il n'y a plus que l'electrode, au-dessus
+// il y a de l'electronique qui doit rester au sec.
+trait_y = 26.0;    // limite d'immersion (trait blanc), lue au reglet
+compo_y = 24.4;    // dernier composant, par rapport d'image sur o1-10
+
+// Un garde-fou plutot qu'un commentaire : raccourcir encore la coque
+// laisserait le trait d'immersion dehors, et le rendu echouerait ici au
+// lieu de sortir une piece qui a l'air bonne.
+assert(pcb_in >= trait_y + 2,
+       "pcb_in laisse le trait d'immersion hors de la coque");
+assert(pcb_in >= compo_y + 2,
+       "pcb_in laisse le dernier composant hors de la coque");
 conn_l  = 8.7;     // longueur du connecteur PH2.0-3P (le long du PCB)
 conn_dh = 0.0;     // distance bord haut du PCB -> haut du connecteur
 conn_h  = 5.75;    // hauteur du connecteur au-dessus du PCB
@@ -140,7 +159,10 @@ enc_diam = 4.0;    // diametre de l'encoche demi-circulaire     <<< MESURE
 ergot_r  = 1.2;
 
 /* [Corps] */
-H       = 52.0;    // hauteur du corps
+// Hauteur du corps : la carte, plus 4 mm au-dessus de son bord haut pour
+// que le cable tourne dans le col. Derivee, et non posee a la main : sans
+// ca, raccourcir pcb_in laisse le corps, le col et les vis derriere.
+H       = pcb_in + 4;
 Wb      = 30.0;    // largeur du corps
 r_coin  = 3.0;
 paroi   = 2.4;
@@ -156,11 +178,17 @@ Wj      = 42.0;
 jupe_h  = 8.0;
 
 /* [Col de cygne] */
-arc_R      = 10.0;  // rayon de la boucle
+// Rayon de la boucle. 12 et non 10 : a 10, le brin descendant du conduit
+// tombait a x=20 et son bore (16,4 a 23,6) ouvrait dans les logements
+// d'ecrou du haut (13,65 a 19,35). Le nid d'abeille n'etait alors ferme
+// que sur trois cotes et l'ecrou serait sorti au serrage. A 12 le brin
+// descend a x=24, ce qui laisse 1 mm de paroi — et donne au passage un
+// rayon de cintrage plus confortable au cable.
+arc_R      = 12.0;
 tube_ext   = 12.0;  // diametre exterieur du conduit
 tube_bore  = 7.2;   // diametre interieur (passage du cable)
-y_haut     = 56.0;  // altitude de l'axe de la boucle
-y_bouche   = 40.0;  // altitude de la bouche de sortie
+y_haut     = H + 4;   // altitude de l'axe de la boucle
+y_bouche   = H - 12;  // altitude de la bouche de sortie
 
 /* [Soudures du connecteur, au dos de la carte] */
 // Le connecteur est traversant : ses trois soudures depassent au DOS
@@ -170,8 +198,9 @@ y_bouche   = 40.0;  // altitude de la bouche de sortie
 // saillie reelle au-dessus du joint n'est que soudure_h - pcb_enf.
 // C'est ce qu'il faut degager, pas les 2 mm bruts.
 soudure_h   = 2.0;    // hauteur des soudures au-dessus du dos  <<< MESURE
-soudure_y   = 43.5;   // rang des soudures : 4,5 mm sous le bord haut
-                      // du PCB, releve sur o1-14 par rapport d'image
+soudure_y   = pcb_in - 4.5;  // rang des soudures, releve a 4,5 mm sous le
+                             // bord haut du PCB sur o1-14, par rapport
+                             // d'image
 soudure_pas = 2.54;   // pas du rang (pas 2,0 : c'est un pas au pouce)
 soudure_d   = 2.2;    // diametre d'une bille de soudure, estime
 soudure_jeu = 0.3;    // jeu au-dessus des soudures
@@ -218,7 +247,10 @@ ecrou_deg  = 4.0;   // degagement sous l'ecrou, pour la pointe de vis
 // des oreilles, comme celles du bas. Et les oreilles grandissent
 // (10 -> 12) parce qu'un logement d'ecrou tient plus de place qu'un
 // avant-trou : il faut qu'il reste en dedans de la rainure.
-vis_pos    = [[-16,8],[16,8],[-16,44],[16,44]];
+// x=16,5 et non 16 : le logement d'ecrou passe alors a 0,95 mm de
+// l'ergot, contre 0,45 a 16. Le corps ayant raccourci, les ergots sont
+// descendus a 10 mm du bas et voisinent desormais les vis basses.
+vis_pos    = [[-16.5,8],[16.5,8],[-16.5,H-8],[16.5,H-8]];
 oreille_d  = 12.0;
 
 $fn = 64;
@@ -321,14 +353,16 @@ module ecrou_logements() {
 // Tout ce qui est retire a la coquille avant, en un seul module :
 // le banc d'essai l'intersecte avec la peau exterieure pour prouver
 // qu'aucune cavite ne debouche dehors.
-module avant_cavites() {
+module avant_creux() {
     translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conn();
     translate([0,0,ep_av - prof_comp]) linear_extrude(prof_comp + 1) p_comp();
     translate([0,0,ep_av - (pcb_t + pcb_enf)]) linear_extrude(pcb_t + 1 + pcb_enf) p_pcb();
     translate([0,0,ep_av - prof_conn]) linear_extrude(prof_conn + 1) p_conduit();
     translate([0,0,ep_av - rainure_p]) linear_extrude(rainure_p + 1) p_rainure();
-    ecrou_logements();
 }
+
+// Tout ce qui est retire a la coquille avant.
+module avant_cavites() { avant_creux(); ecrou_logements(); }
 
 module coque_avant() {
     if (encoches) ergots();
@@ -472,7 +506,14 @@ if (piece == "integrite-languette")
         translate([0, 0, -languette_h]) linear_extrude(languette_h) p_languette();
     }
 
-// 7. La piece EXPORTEE se retourne-t-elle sur la coquille avant ?
+// 7. Un logement d'ecrou ouvre-t-il dans une autre cavite ? Un nid
+//    d'abeille perce sur un cote ne retient plus rien : l'ecrou sort au
+//    serrage. C'etait le cas des deux vis du haut depuis la v6, ou le
+//    conduit du cable passait au travers.
+if (piece == "interference-ecrous")
+    intersection() { ecrou_logements(); avant_creux(); }
+
+// 8. La piece EXPORTEE se retourne-t-elle sur la coquille avant ?
 //    On prend la coquille arriere telle qu'elle sort du slicer, on la
 //    retourne par une rotation — le geste des doigts — et on demande
 //    qu'elle retombe exactement sur sa pose d'assemblage. Un miroir
