@@ -195,9 +195,10 @@ scotch sur la table.
 | `o7-03` | Le boîtier ouvert, montage terminé | La référence pour toute maintenance future |
 | `o7-04` | Le boîtier fermé, en place sur le terrain | L'état nominal |
 | `o7-05` | Vue large de l'allée avec les positions repérées | La carte d'implantation |
-| `o7-06` | La [coque](/materiel/coque-des-sondes/) imprimée, coquilles ouvertes, sonde posée dedans | Le montage, et la preuve que les ergots tombent en face des encoches |
+| `o7-06` ✅ | La [coque](/materiel/coque-des-sondes/) montée, sonde dedans, vue de la **coquille avant** | Cette face n'a aucun perçage : c'est la preuve visible que plus rien ne relie l'extérieur au volume étanche |
 | `o7-07` | La coque fermée, câble sorti par le col de cygne | La sortie de câble vers le bas, qui est tout l'intérêt du design |
 | `o7-08` | L'électrode vernie, avant et après | Le vernissage est la moitié de la protection |
+| `o7-09` ✅ | La coque en main, de profil | L'encombrement réel une fois fermée, et le plan de joint |
 
 :::caution[Photographie avant de reboucher]
 `o7-01` et `o7-02` sont les seules photos de cette liste qu'il est **impossible**

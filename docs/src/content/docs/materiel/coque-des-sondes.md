@@ -453,9 +453,21 @@ logement d'écrou n'ouvre dans une cavité**, quelle qu'elle soit.
 
 ![Rendu de la coquille avant en v9 : corps raccourci, quatre logements hexagonaux d'écrou fermés, rainure de joint sur tout le contour et boucle du col élargie](../../../assets/coque/coquille-avant.png)
 
-**Cette version est imprimée et validée au montage.** La géométrie est close :
-ce qui reste à prouver, c'est la tenue dehors, et ça ne se voit pas sur une
-table.
+**Cette version est imprimée et validée au montage.**
+
+![La coque v9 montée et vissée, sonde à l'intérieur, vue de la coquille avant : la face est entièrement lisse, sans le moindre perçage](../../../assets/photos/o7-06-coque-montee.jpg)
+
+Cette photo montre la **coquille avant**, et ce qu'on n'y voit pas est le
+résultat le plus important de la série : **aucun perçage**. Jusqu'à la v5,
+quatre avant-trous traversaient cette face de part en part, à l'intérieur du
+cordon de joint. La face est maintenant pleine — la visserie s'arrête dans les
+écrous noyés au plan de joint, et rien ne relie plus l'extérieur au volume
+qu'on cherche à étancher.
+
+![La coque fermée tenue en main, de profil, la sonde sortant par le bas](../../../assets/photos/o7-09-coque-en-main.jpg)
+
+La géométrie est close. Ce qui reste à prouver, c'est la tenue dehors, et ça ne
+se voit pas sur une table.
 
 ## Le relevé qui a tranché
 
