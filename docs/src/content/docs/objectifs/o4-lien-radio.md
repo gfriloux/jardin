@@ -66,6 +66,65 @@ Le facteur d'étalement est le levier principal : monter de SF7 à SF12 multipli
 la portée, mais aussi le temps d'antenne (donc la consommation, et le délai
 imposé par le rapport cyclique). On commence bas et on ne monte que sur preuve.
 
+## Les deux croquis
+
+`08-node-emission` et `09-gateway-reception`. Ils s'écrivent et se compilent
+sans carte branchée — `just fw-check` les couvre comme les huit autres.
+
+**Le nœud** lit la sonde, lit sa batterie, compose la trame et l'émet. Il
+affiche aussi sur la liaison série ce qu'il vient d'émettre : le croquis se
+teste donc seul, sans la passerelle, en regardant défiler le moniteur.
+
+**La passerelle** reçoit, ajoute le RSSI et le SNR, écrit une ligne. Elle
+n'interprète pas la charge utile — elle l'insère telle quelle dans son
+enveloppe, exactement comme le collecteur recopie sans comprendre. Le jour où
+le nœud ajoute un champ, il traverse intact.
+
+:::tip[Toute la chaîne aval existe déjà, et a déjà tourné]
+La ligne que la passerelle produit n'est pas inventée pour l'occasion :
+
+```json
+{"rssi":-90,"snr":5.4,"frame":{"node":"NODE-001","seq":48,"battery":4.81,"sensors":{"soil-01":2121}}}
+```
+
+C'est le format que `tools/simulateur-noeud.py` produit depuis
+[O0](/objectifs/o0-socle/) et que `collector/` consomme. Archive NDJSON, base,
+Grafana : tout a déjà tourné dessus. La passerelle n'a qu'à parler la même
+langue, et rien en dessous ne bouge.
+
+Un test du collecteur vérifie **octet pour octet** la ligne que produit le
+`Serial.printf` de la passerelle. Si quelqu'un touche à l'un des deux formats,
+ça casse là, et pas au fond du jardin.
+:::
+
+### Le garde-fou de rapport cyclique
+
+Il est **calculé, pas deviné**. RadioLib sait dire le temps d'antenne exact
+d'une charge utile donnée ; le nœud attend cent fois ça, pour le 1 % de la
+bande. Le plancher de 60 s s'applique par-dessus, parce qu'à SF7 une petite
+trame autoriserait de réémettre toutes les six secondes — légal, mais inutile
+pour un sol qui bouge à l'échelle de l'heure.
+
+Le nœud affiche les trois chiffres à chaque tour, ce qui rend le garde-fou
+vérifiable au lieu d'être promis :
+
+```text
+temps d'antenne 62 ms -> attente legale 6200 ms, retenue 60000 ms
+```
+
+### La taille de trame, tranchée avant d'aller marcher
+
+Une des questions ouvertes ci-dessous se règle à la calculette :
+
+| Trame | Octets | SF7–SF9 | SF10–SF12 |
+|---|---|---|---|
+| 1 sonde | 70 | ✅ | ❌ (51 max) |
+| 3 sondes | 100 | ✅ | ❌ |
+
+La campagne démarre à SF7, donc rien ne bloque. Mais **si la portée oblige à
+monter au-delà de SF9, le JSON en clair devra céder la place à un format
+compact** — et il vaut mieux le savoir avant la campagne que pendant.
+
 ## La campagne de portée
 
 Le test qui compte ne se fait pas sur la table.

@@ -113,6 +113,28 @@ mod tests {
     }
 
     #[test]
+    fn accepte_la_ligne_du_firmware_09_gateway_reception() {
+        // Octet pour octet ce que produit le `Serial.printf` de la passerelle,
+        // la charge utile venant du `snprintf` du nœud. Le firmware compose sa
+        // trame à la main, sans bibliothèque JSON : si quelqu'un touche à l'un
+        // des deux formats, c'est ici que ça doit casser, et pas au jardin.
+        let brut = concat!(
+            r#"{"rssi":-90,"snr":5.4,"frame":"#,
+            r#"{"node":"NODE-001","seq":48,"battery":4.81,"#,
+            r#""sensors":{"soil-01":2121}}}"#
+        );
+        let (node, ligne) = vers_archive(brut, instant()).unwrap();
+        assert_eq!(node, "NODE-001");
+
+        let archive: LigneArchive = serde_json::from_str(&ligne).unwrap();
+        assert_eq!(archive.rssi, Some(-90));
+        assert_eq!(archive.snr, Some(5.4));
+        assert_eq!(archive.frame.seq, Some(48));
+        assert_eq!(archive.frame.battery, Some(4.81));
+        assert_eq!(archive.frame.sensors["soil-01"], 2121.0);
+    }
+
+    #[test]
     fn laisse_passer_un_champ_inconnu() {
         // Le jour où le firmware ajoute quelque chose, ça ne doit pas se perdre.
         let brut = r#"{"rssi":-91,"frame":{"node":"N1","firmware":"0.4.2"}}"#;
