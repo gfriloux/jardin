@@ -466,6 +466,15 @@ qu'on cherche à étancher.
 
 ![La coque fermée tenue en main, de profil, la sonde sortant par le bas](../../../assets/photos/o7-09-coque-en-main.jpg)
 
+Et le câble branché, sorti par la bouche du col de cygne :
+
+![La coque v9 fermée, sonde dedans, le câble trois fils sortant sur le côté par la bouche du col de cygne et repartant vers le bas](../../../assets/photos/o7-07-coque-cable-sorti.jpg)
+
+C'est le défaut de la v1 qui se referme, quatre versions plus tard. La sortie
+verticale d'origine était un entonnoir ; la bouche regarde maintenant vers le
+bas, 26 mm plus bas que le point haut du conduit. Pour entrer, l'eau devrait
+remonter.
+
 La géométrie est close. Ce qui reste à prouver, c'est la tenue dehors, et ça ne
 se voit pas sur une table.
 
