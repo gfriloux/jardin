@@ -11,6 +11,12 @@ $ just coque-test         # banc d'essai des ergots
 $ just coque-preview      # ouvre le modèle dans OpenSCAD
 ```
 
+## État
+
+**La v9 est imprimée et validée au montage.** La carte s'encastre, les deux
+coquilles s'emboîtent, la visserie a sa place. Ce qui reste à prouver est la
+tenue dans la durée, à O7.
+
 ## ⚠️ Avant d'imprimer
 
 **Passe `just coque-test`.** Huit contrôles, un par défaut déjà rencontré :

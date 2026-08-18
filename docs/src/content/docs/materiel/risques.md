@@ -101,7 +101,9 @@ au lancement du projet :
    applique des restrictions aux particuliers de l'UE.
 2. **Protéger les sondes génériques** — une [coque imprimée en
    3D](/materiel/coque-des-sondes/) sur la partie haute, plus un vernissage de
-   l'électrode et des chants. La conception est faite et versionnée.
+   l'électrode et des chants. La coque n'est plus une intention : elle est
+   **imprimée et validée au montage**, à ~0,20 € de filament la pièce contre
+   18 € la sonde étanche.
 
 La décision se prendra à [O7](/objectifs/o7-mise-au-jardin/), à la lumière du
 comportement réel des sondes pendant le POC.

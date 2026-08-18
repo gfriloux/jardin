@@ -4,8 +4,8 @@ description: Le boîtier imprimé en 3D qui protège la partie haute des sondes 
 sidebar:
   order: 4
   badge:
-    text: v9 à imprimer
-    variant: caution
+    text: v9 validée
+    variant: success
 ---
 
 Les sondes vivront dehors. Leur électronique n'est pas protégée. Ce travail de
@@ -18,33 +18,25 @@ $ just coque-test       # banc d'essai : huit contrôles, un par défaut rencont
 $ just coque-preview    # ouvre le modèle
 ```
 
-:::note[Où en est la pièce]
-La **v4** a été imprimée : elle sortait propre, la carte n'entrait pas — `enc_y`
-était estimée à 34 mm alors qu'elle vaut **20**. La **v5** a corrigé la cote, a
-été imprimée à son tour, et **la carte s'encastre**.
+:::tip[Où en est la pièce : la v9 est imprimée et validée au montage]
+La géométrie est close. Ce qui reste à prouver n'est plus la forme, c'est la
+**tenue dans la durée** — et ça se verra à [O7](/objectifs/o7-mise-au-jardin/),
+pas sur une table.
 
-Le montage sur table a alors montré ce que la coque ratait une fois fermée :
-pas de languette sur la coquille arrière, pas de logement d'écrou ni de tête de
-vis, deux vis passant dans la carte et quatre perçages traversant la coque de
-part en part. C'est ce qu'a repris la **v6** — voir
-[fermer la coque](#v6--fermer-la-coque).
+Cinq versions ont été imprimées pour y arriver, chacune corrigée sur un défaut
+que la précédente ne pouvait pas montrer :
 
-La v6 a été imprimée à son tour, et sa coquille arrière sortait inutilisable :
-elle était posée sur l'avant par un miroir là où il fallait une rotation, si
-bien qu'**aucun mouvement physique** ne l'amenait à sa place — c'est la **v7**
-qui corrige ça, voir [une coquille arrière qu'on peut
-retourner](#v7--une-coquille-arrière-quon-peut-retourner).
+| | Ce que la pièce en main a appris |
+|---|---|
+| **v4** | la carte n'entre pas : `enc_y` estimé à 34 mm en vaut 20 |
+| **v5** | la carte s'encastre — et deux trous de vis manquent à l'appel, ils sont sous elle |
+| **v6** | la coquille arrière est inutilisable : posée par un miroir, elle n'atteint sa pose par aucun mouvement réel |
+| **v8** | les deux coquilles s'emboîtent ; le connecteur est traversant et ses soudures tapaient dans le couvercle |
+| **v9** | 18 mm d'électrode rendus au sol, et les logements d'écrou refermés |
 
-La sonde en main a enfin montré ce qu'aucune vue ne disait : le connecteur est
-traversant, et ses **trois soudures dépassent de 2 mm au dos de la carte**,
-exactement là où le couvercle vient. C'est la **v8** qui les dégage — voir
-[les soudures du connecteur](#v8--les-soudures-du-connecteur). Elle a été
-imprimée, et **les deux coquilles s'emboîtent**.
-
-La **v9**, à imprimer, rend au sol 18 mm d'électrode que la coque couvrait sans
-nécessité, et referme au passage les logements d'écrou du haut, qui ouvraient
-dans le conduit du câble depuis la v6 — voir [raccourcir la
-coque](#v9--raccourcir-la-coque).
+Le [cheminement](#le-cheminement-de-la-conception) détaille chacune. Aucun de
+ces défauts n'était visible à l'écran, et c'est le vrai enseignement de la
+série.
 :::
 
 ## La contrainte qui gouverne tout le reste
@@ -461,6 +453,10 @@ logement d'écrou n'ouvre dans une cavité**, quelle qu'elle soit.
 
 ![Rendu de la coquille avant en v9 : corps raccourci, quatre logements hexagonaux d'écrou fermés, rainure de joint sur tout le contour et boucle du col élargie](../../../assets/coque/coquille-avant.png)
 
+**Cette version est imprimée et validée au montage.** La géométrie est close :
+ce qui reste à prouver, c'est la tenue dehors, et ça ne se voit pas sur une
+table.
+
 ## Le relevé qui a tranché
 
 La sonde est photographiée **posée sur un réglet**, dans son plan. Mesurer les
@@ -614,11 +610,12 @@ ont été rédigés :
 
 | Voie | Coût | Ce qu'on sait |
 |---|---|---|
-| Sondes génériques + coque + vernis | ~2 €/sonde + impression | Toute la conception est faite ; les sondes sont déjà là |
+| Sondes génériques + coque + vernis | ~2 €/sonde + impression | La coque est imprimée et validée au montage ; les sondes sont déjà là |
 | Sondes étanches du commerce (SEN0308, IP65) | ~18 €/sonde | Mal distribuées en France, Farnell annonce septembre 2026 |
 
-La première voie devient crédible. Elle reste à valider **par la durée** — une
-sonde vernie et encoquée qui tient un hiver vaut mieux qu'une promesse IP65. La
+La première voie n'est plus une hypothèse : la pièce existe et se monte. Elle
+reste à valider **par la durée** — une sonde vernie et encoquée qui tient un
+hiver vaut mieux qu'une promesse IP65. La
 décision n'est pas à prendre maintenant : elle se prendra à
 [O7](/objectifs/o7-mise-au-jardin/), à la lumière du comportement réel des
 sondes du POC.
