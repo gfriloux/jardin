@@ -125,6 +125,38 @@ La campagne démarre à SF7, donc rien ne bloque. Mais **si la portée oblige à
 monter au-delà de SF9, le JSON en clair devra céder la place à un format
 compact** — et il vaut mieux le savoir avant la campagne que pendant.
 
+### Le premier essai, dans l'ordre qui isole les pannes
+
+Trois étapes, chacune ne pouvant échouer que pour une raison :
+
+```console
+$ just fw 03-radio                # sur NODE-001 : le bus SPI répond-il ?
+$ just fw 09-gateway-reception    # sur GATEWAY-001, qu'on laisse branchée
+$ just fw 08-node-emission        # sur NODE-001
+```
+
+Une ligne JSON doit alors apparaître sur le moniteur de la passerelle. Si rien
+n'arrive, **comparer les six paramètres radio en tête des deux croquis avant de
+soupçonner la portée ou l'antenne** : deux cartes mal accordées restent muettes
+l'une pour l'autre sans qu'aucune ne signale d'erreur, et c'est le mode de panne
+le plus coûteux à diagnostiquer.
+
+:::danger[Antenne clipsée sur les deux cartes, avant toute mise sous tension]
+`08-node-emission` est le premier croquis du projet qui **émet vraiment** —
+`03-radio` s'arrêtait volontairement au réveil de la puce. Un SX1262 qui émet
+sans antenne se détruit.
+:::
+
+:::caution[La tension de batterie est du conditionnel]
+GPIO 37 pour le pont diviseur, GPIO 1 pour lire, rapport 4,9 : trois valeurs
+venues de la documentation Heltec, jamais vérifiées sur notre clone. Si le
+chiffre émis est absurde, le premier suspect est la **polarité** de
+`PIN_BAT_CTRL`, le second le rapport du pont.
+
+C'est [O6](/objectifs/o6-autonomie/) qui tranchera, l'autonomie étant son
+sujet. Ici la valeur ne sert qu'à remplir le champ `battery` de la trame.
+:::
+
 ## La campagne de portée
 
 Le test qui compte ne se fait pas sur la table.
