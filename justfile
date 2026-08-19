@@ -232,6 +232,102 @@ coque-test:
 coque-clean:
     rm -rf hardware/coque/build
 
+# ─── Coque des cartes LoRa ──────────────────────────────────────────────────
+
+# Génère les STL du bac, du couvercle et des trois bouchons.
+coque-carte-stl:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p hardware/coque-carte/build
+    for p in fond couvercle bouchon-usb bouchon-boutons bouchon-ecran; do
+      openscad -o "hardware/coque-carte/build/$p.stl" -D "piece=\"$p\"" \
+        hardware/coque-carte/coque.scad
+    done
+    ls -lh hardware/coque-carte/build/
+
+# Ouvre le modèle dans OpenSCAD pour le manipuler.
+coque-carte-preview:
+    openscad hardware/coque-carte/coque.scad
+
+# Banc d'essai de la coque des cartes. Neuf contrôles, chacun rendant un
+# volume qui doit être vide. Le premier — la carte fille contre l'écran — est
+# le mode de panne propre à l'empilage : la coque sort propre, se visse, et
+# écrase l'OLED.
+coque-carte-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+    echec=0
+
+    # Même verdict que `coque-test` : il se prend sur le VOLUME, pas sur
+    # l'existence du fichier. Soustraire deux solides aux frontières
+    # confondues fait rendre à CGAL un maillage bavard dont le volume est nul.
+    rendu() {
+      rm -f "$tmp/i.stl"
+      local err v
+      err=$(openscad -o "$tmp/i.stl" -D "piece=\"$1\"" ${2:+-D} ${2:-} \
+            hardware/coque-carte/coque.scad 2>&1 >/dev/null || true)
+      if [ -s "$tmp/i.stl" ]; then
+        if v=$(tools/volume-stl.py "$tmp/i.stl" 0.001); then echo libre
+        else echo "bute, $v mm3"; fi
+      elif printf '%s' "$err" | grep -q 'top level object is empty'; then
+        echo libre
+      else
+        printf '%s\n' "$err" >&2
+        echo "openscad n'a produit ni volume ni « objet vide »" >&2
+        exit 1
+      fi
+    }
+    verdict() {  # attendu, obtenu, libellé
+      local pad; pad=$(printf '%*s' $(( 52 - ${#3} )) '')
+      local mot=${2%%,*}
+      if [ "$1" = "$mot" ]; then printf '  ok    %s%s %s\n' "$3" "$pad" "$2"
+      else printf '  ÉCHEC %s%s %s, attendu %s\n' "$3" "$pad" "$2" "$1"; echec=1; fi
+    }
+
+    echo "la carte fille au-dessus de l'écran"
+    for cas in 0:libre 2:libre 6:bute 9:bute; do
+      d=${cas%:*}
+      verdict "${cas#*:}" "$(rendu interference-fille "essai=$d")" \
+              "abaissée de $d mm"
+    done
+
+    echo "le reste de la coque"
+    verdict libre "$(rendu interference-couvercle)"    "rien ne touche le couvercle"
+    verdict libre "$(rendu interference-vis)"          "aucune vis ne traverse une carte"
+    verdict libre "$(rendu interference-peau)"         "aucun logement d'écrou ne débouche dehors"
+    verdict libre "$(rendu interference-ecrous)"       "aucun écrou n'ouvre dans le volume intérieur"
+    verdict libre "$(rendu integrite-joint)"           "aucun écrou ne mord l'anneau de joint"
+    verdict libre "$(rendu interference-joint)"        "la languette entre dans la rainure"
+    verdict libre "$(rendu interference-usb)"          "la fiche USB-C atteint la prise"
+    verdict libre "$(rendu interference-retournement)" "la pièce imprimée se retourne"
+
+    # Un contrôle qu'on n'a jamais vu échouer peut très bien ne rien mesurer.
+    # Chaque ligne réintroduit le défaut que le contrôle est censé attraper et
+    # exige qu'il morde. C'est ce qui a révélé que la visserie, dérivée de la
+    # taille des cartes, ne pouvait PAS tomber dessus : le contrôle était vrai
+    # par construction et ne prouvait rien. D'où `vis_marge`, qui existe pour
+    # que le défaut redevienne exprimable.
+    echo "contre-épreuve : chaque contrôle doit mordre"
+    verdict bute "$(rendu interference-couvercle 'garde=-4')"    "couvercle abaissé de 4 mm"
+    verdict bute "$(rendu interference-vis 'vis_marge=-18')"     "vis ramenées sur les cartes"
+    verdict bute "$(rendu interference-peau 'ecrou_deg=40')"     "dégagement d'écrou traversant le fond"
+    verdict bute "$(rendu interference-ecrous 'vis_marge=-2')"   "oreilles ramenées sur la cavité"
+    verdict bute "$(rendu integrite-joint 'ecrou_plat=16')"      "écrou démesuré, mordant le joint"
+    verdict bute "$(rendu interference-joint 'languette_l=3')"   "languette plus large que la rainure"
+    verdict bute "$(rendu interference-usb 'usb_l=4')"           "ouverture USB trop étroite"
+
+    # Le retournement n'a pas de contre-épreuve par paramètre : il ne se casse
+    # qu'en écrivant mirror() au lieu de rotate() dans couvercle_a_plat(). Il
+    # reste utile comme garde-fou de régression, pas comme mesure.
+
+    [ $echec -eq 0 ] && echo "coque des cartes OK" \
+                     || (echo "la coque des cartes ne se monte pas" >&2; exit 1)
+
+# Supprime les STL générés.
+coque-carte-clean:
+    rm -rf hardware/coque-carte/build
+
 # ─── Collecteur ─────────────────────────────────────────────────────────────
 
 # Compile le collecteur.

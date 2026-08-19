@@ -17,8 +17,9 @@ firmware/.pio/
 target/
 collector/target/
 
-# Coque — les STL sont générés depuis le .scad, qui est la source de vérité
+# Coques — les STL sont générés depuis le .scad, qui est la source de vérité
 hardware/coque/build/
+hardware/coque-carte/build/
 
 # Stack serveur — l'archive brute des mesures n'a pas à être versionnée
 stack/data/*
