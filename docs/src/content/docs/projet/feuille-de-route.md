@@ -102,8 +102,10 @@ d'autre :
 Tout ce qui ne sert pas à répondre à l'une de ces quatre questions est du
 travail reporté à la V1.
 
-Trois des quatre sont donc closes. **La dernière est le seul chantier
-restant du POC**, et il ne lui manque qu'une semaine de mesures.
+Trois des quatre sont donc closes. **La dernière est le seul chantier restant
+du POC** : la chaîne a tourné de bout en bout, il lui reste à prouver qu'elle
+encaisse les incidents — nœud muet, ligne d'archive illisible, collecteur
+relancé.
 
 ## La progression du montage
 

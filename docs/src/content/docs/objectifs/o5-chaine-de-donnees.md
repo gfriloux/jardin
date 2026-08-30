@@ -146,16 +146,18 @@ rentrent même avant qu'on ait déclaré quoi que ce soit.
 
 ```console
 $ just db-wiring
-+----------+---------+------------+-----------+----------+
-| node_uid | channel | sensor_uid | zone_uid  | depth_cm |
-+----------+---------+------------+-----------+----------+
-| NODE-001 | soil-01 | SOIL-A1    | FRAISIERS |       10 |
-| NODE-001 | soil-02 | SOIL-A2    | FRAISIERS |       10 |
-| NODE-001 | soil-03 | SOIL-A3    | FRAISIERS |       20 |
-+----------+---------+------------+-----------+----------+
++----------+---------+--------------------------+------------------+-----------+----------+
+| node_uid | channel | point_label              | measurement_type | zone_uid  | depth_cm |
++----------+---------+--------------------------+------------------+-----------+----------+
+| NODE-001 | soil-01 | Fraisiers — humidité 1   | soil_moisture    | FRAISIERS |     NULL |
+| NODE-001 | soil-02 | Fraisiers — humidité 2   | soil_moisture    | FRAISIERS |     NULL |
+| NODE-001 | soil-03 | Fraisiers — humidité 3   | soil_moisture    | FRAISIERS |     NULL |
++----------+---------+--------------------------+------------------+-----------+----------+
 ```
 
-Puis une semaine de mesures lisible à la fois dans Grafana et dans l'archive.
+Trois voies, trois libellés, une zone — et les mesures qui s'y rattachent dans
+Grafana comme dans l'archive. `depth_cm` reste vide tant que rien n'est en
+terre : c'est [O7](/objectifs/o7-mise-au-jardin/) qui le remplira.
 
 ## Le simulateur de nœud
 
