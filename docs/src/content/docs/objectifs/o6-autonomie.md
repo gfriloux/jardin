@@ -79,6 +79,13 @@ espacer ensuite.
 
 ## Questions ouvertes
 
+- **Pourquoi la lecture de batterie renvoie-t-elle zéro ?** La campagne de
+  [O4](/objectifs/o4-lien-radio/#résultats) a émis 170 trames portant toutes
+  `"battery":0.00`. Le montage supposé — GPIO 37 pour commander le pont
+  diviseur, GPIO 1 pour le lire, rapport 4,9 — vient de la documentation Heltec
+  et n'a jamais été vérifié sur notre clone. Premier suspect : la **polarité**
+  de `PIN_BAT_CTRL`, qu'on suppose active à l'état bas ; second : le rapport du
+  pont. C'est un symptôme franc, donc facile à attaquer au voltmètre.
 - Quelle consommation réelle en deep sleep sur cette carte précise ?
 - Quelle capacité de batterie pour tenir une semaine sans soleil en décembre ?
 - Quelle taille de panneau pour un bilan positif au solstice d'hiver ?

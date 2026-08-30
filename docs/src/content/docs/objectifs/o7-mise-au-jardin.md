@@ -102,10 +102,26 @@ indispensable : c'est par les tranches nues du PCB que l'humidité remonte.
 
 ## La portée en conditions réelles
 
-La campagne de [O4](/objectifs/o4-lien-radio/) était ponctuelle. Ici on observe
-le lien **dans la durée** : RSSI et SNR archivés à chaque trame, et on regarde
-ce que font la végétation qui pousse, la pluie, l'humidité de l'air et les
-saisons.
+La campagne de [O4](/objectifs/o4-lien-radio/#résultats) était ponctuelle. Ici
+on observe le lien **dans la durée** : RSSI et SNR archivés à chaque trame, et
+on regarde ce que font la végétation qui pousse, la pluie, l'humidité de l'air
+et les saisons.
+
+Elle laisse deux choses à vérifier ici, et une réserve confortable pour les
+absorber :
+
+**La hauteur.** O4 a mesuré −64,4 dBm avec le nœud à portée de main. Dans sa
+coque, posé au sol, il perdra facilement 10 à 20 dB — la proximité du sol coûte
+cher en propagation. Sur 60 dB de marge c'est absorbable sans discussion, mais
+la mesure se refait au même endroit, coque fermée et posée, plutôt que de se
+supposer.
+
+**Le boîtier.** Une coque plastique n'atténue presque rien à 868 MHz, mais
+l'antenne collée contre une paroi ou repliée dans le volume, si. C'est le
+placement de l'antenne qu'on vérifie, pas la matière de la coque.
+
+Avec 60 dB devant soi, aucune de ces deux questions n'est un risque pour le
+projet — ce sont des mesures de contrôle, à faire une fois et à archiver.
 
 ## Questions ouvertes
 

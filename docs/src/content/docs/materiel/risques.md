@@ -223,6 +223,13 @@ configurer 868 MHz** dans le firmware — le défaut du module peut être ailleu
 constantes du firmware, posées dès [O4](/objectifs/o4-lien-radio/), avec un
 garde-fou qui refuse d'émettre trop tôt.
 
+Le garde-fou est **calculé et non deviné** : le nœud demande à RadioLib le temps
+d'antenne réel de la trame qu'il vient d'émettre et attend cent fois cette
+durée. En campagne, l'intervalle constaté tourne autour de **14 s** pour une
+trame de 71 octets à SF7, soit ~140 ms de temps d'antenne. Un plancher s'applique
+par-dessus — 60 s en exploitation, abaissé à 10 s le temps d'une campagne de
+portée.
+
 ## Les straps Dupont ne sont pas des câbles
 
 **Le risque.** Les sondes seront à plusieurs mètres du nœud. Les straps Dupont

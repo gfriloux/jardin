@@ -12,6 +12,13 @@ quelle fiabilité ?
 terrain, un taux de réception mesuré, et un RSSI/SNR relevé à chaque position
 testée.
 
+:::note[Critère ramené au besoin réel]
+Il a été tenu à **15 m**, distance qui couvre l'ensemble des plants à surveiller
+aujourd'hui — et non au point le plus éloigné du terrain, qui n'intéresse
+personne tant que rien n'y pousse. La marge mesurée est telle que la question ne
+se reposera qu'en cas d'extension de la zone : voir les [résultats](#résultats).
+:::
+
 **Dépend de.** [O1](/objectifs/o1-une-sonde/) seulement — pas besoin du
 multiplexeur ni de la calibration. C'est la branche qui peut avancer si le
 CD74HC4067 tarde.
@@ -102,15 +109,34 @@ Un test du collecteur vérifie **octet pour octet** la ligne que produit le
 Il est **calculé, pas deviné**. RadioLib sait dire le temps d'antenne exact
 d'une charge utile donnée ; le nœud attend cent fois ça, pour le 1 % de la
 bande. Le plancher de 60 s s'applique par-dessus, parce qu'à SF7 une petite
-trame autoriserait de réémettre toutes les six secondes — légal, mais inutile
+trame autoriserait de réémettre toutes les douze secondes — légal, mais inutile
 pour un sol qui bouge à l'échelle de l'heure.
 
 Le nœud affiche les trois chiffres à chaque tour, ce qui rend le garde-fou
 vérifiable au lieu d'être promis :
 
 ```text
-temps d'antenne 62 ms -> attente legale 6200 ms, retenue 60000 ms
+temps d'antenne 140 ms -> attente legale 14000 ms, retenue 14000 ms
 ```
+
+L'ordre de grandeur est confirmé par la campagne, dont l'intervalle constaté
+tourne autour de 14 s. Le chiffre exact est celui qu'affiche le nœud, sur sa
+propre liaison série — la passerelle ne le voit pas.
+
+:::caution[Le plancher est abaissé pendant la campagne, et doit être remis]
+Mesurer un taux de perte demande cent trames par position. À 60 s l'une, cela
+fait **1 h 40 par position** — une journée entière pour cinq positions, ce qui
+condamne la campagne avant qu'elle commence.
+
+`PERIODE_PLANCHER_MS` est donc passé de 60000 à **10000** le temps de la
+campagne : le calcul légal reprend la main (~14 s constatés) et une position se
+mesure en vingt minutes. Le plancher n'est pas mis à zéro pour autant — il reste
+un filet contre un `getTimeOnAir()` qui renverrait 0, cas où le nœud émettrait
+en continu, illégalement, sans que rien ne le signale.
+
+**À remettre à 60000 une fois la campagne close.** Le commentaire du fichier le
+rappelle.
+:::
 
 ### La taille de trame, tranchée avant d'aller marcher
 
@@ -134,6 +160,31 @@ $ just fw 03-radio                # sur NODE-001 : le bus SPI répond-il ?
 $ just fw 09-gateway-reception    # sur GATEWAY-001, qu'on laisse branchée
 $ just fw 08-node-emission        # sur NODE-001
 ```
+
+:::danger[Une seule carte branchée en USB à la fois]
+C'est le premier objectif où deux cartes existent, et le premier où le port se
+choisit tout seul. `_fw-port` fait `ls /dev/ttyUSB* /dev/ttyACM* | head -1` :
+avec les deux cartes branchées, il prend **la première venue**, sans le dire.
+
+Le téléversement réussit, annonce `SUCCESS`, et le firmware part sur la mauvaise
+carte. On se retrouve avec deux passerelles, ou deux nœuds, et un lien
+silencieux dont rien n'explique le silence.
+
+Débrancher l'une avant de flasher l'autre. La séquence ci-dessus se lit donc :
+flasher, débrancher, flasher, rebrancher.
+:::
+
+Une fois la passerelle validée, la lancer avec `just fw-log` et non `just fw` :
+le moniteur simple n'écrit nulle part, et le tampon du terminal aura tronqué le
+début de la campagne bien avant sa fin.
+
+```console
+$ just fw-log 09-gateway-reception campagne-portee
+```
+
+Un dernier essai à courte distance, nœud déjà sur batterie et dans une autre
+pièce, avant de marcher : il coûte une minute et distingue « pas de portée » de
+« deux cartes mal accordées », qui se ressemblent beaucoup vu du fond du jardin.
 
 Une ligne JSON doit alors apparaître sur le moniteur de la passerelle. Si rien
 n'arrive, **comparer les six paramètres radio en tête des deux croquis avant de
@@ -176,6 +227,32 @@ Un chiffre à garder en tête : le SNR est plus informatif que le RSSI. LoRa
 décode sous le plancher de bruit, et un SNR qui s'effondre annonce la perte de
 lien bien avant que le RSSI ne semble mauvais.
 
+:::note[…mais seulement près de la limite]
+Cette règle ne vaut que dans le régime où elle a un sens. **Le SX1262 ne
+rapporte guère de SNR au-delà de +13 dB** : au-dessus, il sature et la valeur
+cesse de dire autre chose que « très au-dessus du bruit ».
+
+Les relevés de la première campagne sont tous entre +11,2 et +13,5 dB, collés à
+ce plafond. C'est donc le **RSSI** qui y porte l'information, et le SNR qui ne
+dit rien — l'inverse exact de la règle ci-dessus. Elle reprend ses droits quand
+le lien commence à décrocher, pas avant.
+:::
+
+Le dépouillement compte les **`seq` distincts**, pas les lignes du journal :
+compter les lignes gonflerait le taux de réception, éventuellement au-delà de
+100 %.
+
+Ce n'est pas une précaution théorique. **`seq:0` est arrivé en double dans les
+deux journaux du 30 août**, à chaque mise sous tension du nœud — donc
+systématiquement, pas par accident. Le mécanisme n'est pas établi ; l'hypothèse
+la plus simple est que le premier `transmit()` rend un code d'erreur alors que
+la trame est bien partie : `seq` n'est alors pas incrémenté et la trame suivante
+repart avec le même numéro. Le nœud imprime `echec d'emission` dans ce cas, ce
+qui trancherait — mais sa liaison série n'était pas enregistrée.
+
+À vérifier en branchant les deux cartes sur deux terminaux, avant de compter sur
+`seq` pour un taux de perte fin.
+
 ## La trame
 
 Format lisible pour le POC — voir
@@ -191,14 +268,73 @@ comptant les trous dans la séquence qu'on obtient le taux de perte réel.
 
 ## Questions ouvertes
 
-- Quelle portée réelle à SF7, avec les obstacles du terrain ?
-- Faut-il monter en facteur d'étalement, et à quel coût en temps d'antenne ?
-- L'antenne fournie avec la carte est-elle utilisable, ou faut-il en acheter
-  une correcte ?
-- La trame JSON tient-elle dans la charge utile maximale à SF12 (51 octets) ?
-- Le lien est-il stable dans le temps, ou dégradé par la végétation qui pousse
-  et par la pluie ?
+- ✅ **Quelle portée réelle à SF7, avec les obstacles du terrain ?** 15 m sans
+  aucune perte, avec 60 dB de marge.
+- ✅ **Faut-il monter en facteur d'étalement ?** Non. La marge rend la question
+  sans objet, et le coût en temps d'antenne serait payé pour rien.
+- ✅ **L'antenne fournie est-elle utilisable ?** Oui, telle quelle.
+- ✅ **La trame JSON tient-elle à SF12 (51 octets) ?** Sans objet : on reste à
+  SF7, où les 71 octets passent. La question ne se reposerait qu'en cas de
+  montée en SF, elle-même écartée.
+- ⬜ **Le nœud au ras du sol porte-t-il aussi bien ?** La campagne a été menée
+  avec le nœud à portée de main, pas dans sa coque au sol comme le prévoit
+  [O7](/objectifs/o7-mise-au-jardin/). La proximité du sol coûte facilement 10 à
+  20 dB — que la marge absorbe *a priori*, mais ça se mesure.
+- ⬜ **Le lien est-il stable dans le temps**, ou dégradé par la végétation qui
+  pousse et par la pluie ? Une campagne d'un jour ne peut pas y répondre ; c'est
+  un sujet de [O7](/objectifs/o7-mise-au-jardin/).
 
 ## Résultats
 
-*À remplir.*
+**Campagne du 30 août 2026**, une position à environ **15 m**, obstacles réels,
+nœud sur batterie. Journal brut :
+`mesures/20260830-115420-09-gateway-reception-campagne-portee.log`.
+
+L'essai de table qui l'a précédée
+(`mesures/20260830-115020-…`) sert de point de comparaison, et il est ce qui
+rend le reste lisible : **−17 à −20 dBm à un mètre**. Un signal de table et un
+signal de jardin sont séparés de plus de 40 dB, et c'est cet écart qui permet de
+dire, en lisant un journal seul, d'où une trame est partie.
+
+| | |
+|---|---|
+| Trames émises (`seq` 0 → 169) | 170 |
+| Trames reçues, `seq` distincts | 170 |
+| **Taux de perte** | **0 %** |
+| RSSI moyen | **−64,4 dBm** — min −73, max −62, écart-type 1,2 |
+| SNR moyen | **+12,5 dB** — min +11,2, max +13,5 (saturé) |
+| Intervalle constaté | ~14 s |
+
+### La marge, qui est le vrai résultat
+
+Le taux de perte nul ne dit pas grand-chose seul — il dit seulement qu'on n'a
+pas atteint la limite. C'est la distance à cette limite qui compte :
+
+| | Mesuré | Seuil SF7 | Marge |
+|---|---|---|---|
+| RSSI | −64,4 dBm | ~−124 dBm | **60 dB** |
+| SNR | +12,5 dB | −7,5 dB | **20 dB au moins** |
+
+Soixante décibels, c'est un facteur mille en puissance. Le lien n'est pas
+« suffisant », il est surdimensionné pour l'usage — ce qui laisse de quoi payer
+la coque, le sol, la végétation d'été et la pluie sans rien changer aux six
+paramètres radio.
+
+La marge SNR est un plancher, pas une mesure : le SX1262 sature vers +13 dB.
+
+### Ce qui a aussi été appris
+
+**Le champ `battery` vaut 0.00 sur les 170 trames.** L'avertissement plus haut
+n'était donc pas théorique : le pont diviseur ne renvoie rien d'exploitable sur
+ce clone. Ça ne gêne en rien la portée, mais deux conséquences valent d'être
+notées — le journal ne permet pas de vérifier *a posteriori* que le nœud était
+bien sur batterie, et [O6](/objectifs/o6-autonomie/) hérite d'un symptôme franc
+plutôt que d'un doute.
+
+**La sonde a erré entre 2307 et 2277 points** pendant les quarante minutes, en
+oscillant plutôt qu'en décroissant franchement. Trente points d'amplitude, sans
+qu'on sache ici ce qui bouge — le sol, la température, ou l'électronique. Ce
+n'est pas le sujet de cet objectif, mais c'est exactement le genre de mouvement
+lent que [O3](/objectifs/o3-calibration/) et
+[O8](/objectifs/o8-exploitation/) devront savoir distinguer d'un vrai
+assèchement.
