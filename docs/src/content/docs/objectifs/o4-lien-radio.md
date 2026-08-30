@@ -232,10 +232,18 @@ Cette règle ne vaut que dans le régime où elle a un sens. **Le SX1262 ne
 rapporte guère de SNR au-delà de +13 dB** : au-dessus, il sature et la valeur
 cesse de dire autre chose que « très au-dessus du bruit ».
 
-Les relevés de la première campagne sont tous entre +11,2 et +13,5 dB, collés à
-ce plafond. C'est donc le **RSSI** qui y porte l'information, et le SNR qui ne
-dit rien — l'inverse exact de la règle ci-dessus. Elle reprend ses droits quand
-le lien commence à décrocher, pas avant.
+Ce n'est pas une lecture de fiche technique, les deux journaux du 30 août le
+montrent directement :
+
+| | RSSI | SNR |
+|---|---|---|
+| Nœud dans la même pièce | **−17 à −20 dBm** | +12,5 à +12,8 dB |
+| Nœud à 15 m, obstacles | **−64,4 dBm** | +12,5 dB |
+
+**45 dB d'écart en signal, et le SNR ne bouge pas.** Il ne mesure plus rien dans
+ce régime — c'est le RSSI qui porte toute l'information, l'inverse exact de la
+règle ci-dessus. Elle reprend ses droits quand le lien commence à décrocher,
+pas avant.
 :::
 
 Le dépouillement compte les **`seq` distincts**, pas les lignes du journal :
@@ -290,11 +298,15 @@ comptant les trous dans la séquence qu'on obtient le taux de perte réel.
 nœud sur batterie. Journal brut :
 `mesures/20260830-115420-09-gateway-reception-campagne-portee.log`.
 
-L'essai de table qui l'a précédée
-(`mesures/20260830-115020-…`) sert de point de comparaison, et il est ce qui
-rend le reste lisible : **−17 à −20 dBm à un mètre**. Un signal de table et un
-signal de jardin sont séparés de plus de 40 dB, et c'est cet écart qui permet de
-dire, en lisant un journal seul, d'où une trame est partie.
+L'essai qui l'a précédée (`mesures/20260830-115020-…`), **nœud resté dans la
+même pièce que la passerelle**, sert de point de comparaison — et il est ce qui
+rend le reste lisible : **−17 à −20 dBm**. Trois trames seulement, mais elles
+donnent l'échelle.
+
+Un signal d'intérieur et un signal de jardin sont séparés de **45 dB**, et c'est
+cet écart qui permet de dire, en lisant un journal seul, d'où une trame est
+partie. Sans ce repère, −64 dBm ne veut rien dire — on peut aussi bien le
+prendre pour un signal de table, ce qui est arrivé.
 
 | | |
 |---|---|
