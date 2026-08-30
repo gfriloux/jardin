@@ -1,0 +1,15 @@
+# croquis   : 09-gateway-reception
+# etiquette : campagne-portee
+# date      : 2026-08-30T11:50:32+02:00
+
+--- Terminal on /dev/ttyUSB0 | 115200 8-N-1
+--- Available filters and text transformations: debug, default, direct, esp32_exception_decoder, hexlify, log2file, nocontrol, printable, send_on_enter, time
+--- More details at https://bit.ly/pio-monitor-filters
+--- Quit: Ctrl+C | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+
+=== 09-gateway-reception ===
+ANTENNE OBLIGATOIRE.
+radio OK : 868.1 MHz, BW 125 kHz, SF7, CR4/5 — en ecoute
+{"rssi":-17,"snr":12.8,"frame":{"node":"NODE-001","seq":0,"battery":0.01,"sensors":{"soil-01":2296}}}
+{"rssi":-19,"snr":12.5,"frame":{"node":"NODE-001","seq":0,"battery":0.01,"sensors":{"soil-01":2295}}}
+{"rssi":-20,"snr":12.5,"frame":{"node":"NODE-001","seq":1,"battery":0.00,"sensors":{"soil-01":2294}}}
