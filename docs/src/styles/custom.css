@@ -133,6 +133,12 @@ pre.mermaid svg {
 .schema .jaune {
   stroke: #d9a520;
 }
+.schema .bleu {
+  stroke: #3b82c4;
+}
+.schema .vert {
+  stroke: #4a9d5f;
+}
 
 .schema text {
   fill: currentColor;

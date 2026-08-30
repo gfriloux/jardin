@@ -69,6 +69,34 @@
 // 40 mA qu'un GPIO d'ESP32 peut fournir : pas besoin de transistor au POC.
 #define PIN_SOIL_PWR 6
 
+// --- Multiplexeur CD74HC4067, sujet de O2 ---
+//
+// Un aiguillage : seize entrées, une sortie, et quatre fils d'adresse qui
+// disent laquelle des seize est reliée à la sortie. Il franchit la limite des
+// quatre entrées analogiques directes.
+//
+// Les quatre fils d'adresse vont sur des broches SANS ADC (47, 48) ou sur
+// ADC2 (19, 20), inutilisables pour mesurer de toute façon puisque ADC2 tombe
+// dès que le Wi-Fi s'active. Seul MUX_SIG occupe une broche ADC1 — GPIO 7,
+// celle qui portait déjà la sonde unique — parce que c'est la seule qui mesure.
+//
+// Le multiplexeur libère ainsi PIN_SOIL_SIG_2 (2) et PIN_SOIL_SIG_3 (4) : c'est
+// tout l'objet de O2. GPIO 2 sert pendant la validation à lire la sonde du
+// canal 0 EN DIRECT, en parallèle de sa lecture à travers le mux — même sonde,
+// même terre, même instant. C'est ce qui rend le décalage du mux mesurable
+// sans se heurter aux 37 points de reproductibilité entre séances.
+#define PIN_MUX_SIG PIN_SOIL_SIG
+#define PIN_MUX_S0 47
+#define PIN_MUX_S1 48
+#define PIN_MUX_S2 19
+#define PIN_MUX_S3 20
+// ACTIF À L'ÉTAT BAS : digitalWrite(PIN_MUX_EN, LOW) met l'aiguillage en
+// service. Piloté plutôt que relié à la masse, pour que O6 puisse mesurer ce
+// que coûte de le laisser allumé.
+#define PIN_MUX_EN 5
+// Lecture directe de comparaison, le temps de valider O2.
+#define PIN_SOIL_SIG_DIRECT PIN_SOIL_SIG_2
+
 // Fréquence radio. La carte est vendue 863–928 MHz : il faut imposer 868 MHz,
 // le défaut du module pouvant être hors bande européenne.
 #define LORA_FREQ_MHZ 868.1
