@@ -105,10 +105,20 @@ fw-log croquis etiquette="sans-etiquette":
     pio device monitor -e {{ croquis }} --port "$port" | tee -a "../$fichier"
 
 # Ouvre le moniteur série sans recompiler (ex : just fw-monitor 04-sonde).
-fw-monitor croquis:
+fw-monitor croquis port="":
     #!/usr/bin/env bash
     set -euo pipefail
-    cd firmware && pio device monitor -e {{ croquis }} --port "$(just _fw-port)"
+    # Le port se devine tant qu'une seule carte est branchée. Dès qu'il y en a
+    # deux, il faut le nommer, sinon `_fw-port` prend la première venue :
+    #
+    #   just fw-monitor 08-node-emission /dev/ttyUSB1
+    #
+    # Écouter deux cartes en même temps est sans danger — c'est les FLASHER
+    # toutes les deux branchées qui l'est. Et chaque croquis annonce son nom au
+    # démarrage, ce qui dit laquelle est sur quel port sans avoir à chercher.
+    port="{{ port }}"
+    [ -n "$port" ] || port=$(just _fw-port)
+    cd firmware && pio device monitor -e {{ croquis }} --port "$port"
 
 # Trouve le port USB de la carte, ou échoue en expliquant pourquoi.
 #
