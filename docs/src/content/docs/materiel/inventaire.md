@@ -13,7 +13,7 @@ Tout a été commandé le **mercredi 12 août 2026**, chez Amazon.fr.
 |---|---|---:|---:|---:|---|
 | [Heemol SX1262 LoRa V3](https://www.amazon.fr/dp/B0GQSRZCTR) — ESP32-S3 (LX7 dual-core), OLED 0,96", USB-C, 863–928 MHz | `NODE-001` et `GATEWAY-001` | 2 | 26,98 € | 53,96 € | sam. 15 août |
 | [DollaTek — 3 sondes capacitives](https://www.amazon.fr/dp/B07L2RV1D2) d'humidité du sol, résistantes à la corrosion | les sondes | 1 lot de 3 | 6,99 € | 6,99 € | sam. 15 août |
-| [YOUMILE CD74HC4067](https://www.amazon.fr/dp/B07TXPQ2VM) — multiplexeur analogique/numérique 16 canaux, 2–6 V | multiplexage des sondes | 1 lot de 10 | 11,49 € | 11,49 € | ⚠️ pas de date |
+| [YOUMILE CD74HC4067](https://www.amazon.fr/dp/B07TXPQ2VM) — multiplexeur analogique/numérique 16 canaux, 2–6 V | multiplexage des sondes | 1 lot de 10 | 11,49 € | 11,49 € | livré |
 | [BOJACK breadboards](https://www.amazon.fr/dp/B0B18G3V5T) — 2 × 830 points + 2 × 400 points + 126 straps | prototypage | 1 kit | 13,99 € | 13,99 € | sam. 15 août |
 | [240 straps Dupont](https://www.amazon.fr/dp/B0BTT48V7P) 10 et 20 cm, M/M et M/F | câblage de prototypage | 1 kit | 10,57 € | 10,57 € | sam. 15 août |
 | [INIU 10 000 mAh](https://www.amazon.fr/dp/B08JTQ66K7), 22,5 W, USB-C | alimentation du POC | 1 | 23,59 € | 23,59 € | dim. 16 août |

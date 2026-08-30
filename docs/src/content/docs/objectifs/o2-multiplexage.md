@@ -18,8 +18,8 @@ avec des valeurs identiques à celles relevées en direct pendant
 **Dépend de.** [O1](/objectifs/o1-une-sonde/), et de [O3](/objectifs/o3-calibration/)
 pour les valeurs de référence · **Débloque.** rien dans le POC
 
-**Matériel nécessaire.** Le CD74HC4067 — dont la livraison n'a pas de date
-annoncée.
+**Matériel nécessaire.** Le CD74HC4067, **arrivé**, barrettes soudées. Plus
+rien n'attend.
 
 :::note[Cet objectif ne bloque plus rien]
 Il l'a longtemps semblé, parce que O3 devait passer par lui. Ce n'est pas le
@@ -27,8 +27,8 @@ cas : ADC1 laisse quatre broches libres une fois la batterie et l'alimentation
 des sondes câblées, donc les trois sondes du POC se lisent **en direct**.
 
 O2 sert à franchir la limite de quatre, ce dont l'allée de 15 mètres aura
-besoin — pas le POC sur la table. Le retard de livraison est un agacement, pas
-un blocage.
+besoin — pas le POC sur la table. Le retard de livraison a donc été un agacement
+et jamais un blocage : O4 a été tenu pendant ce temps, avec une sonde unique.
 
 Et l'ordre inversé rend O2 **vérifiable** : son critère de sortie exige des
 valeurs de référence prises sans multiplexeur, que O3 produira. Attendre le

@@ -152,15 +152,20 @@ coûte 7 € et arrive en deux jours ; ce n'est pas un blocage.
 La non-linéarité, elle, est absorbée par la calibration — c'est précisément
 pour ça qu'on [stocke le brut](/decisions/#adr-002--on-stocke-la-valeur-adc-brute).
 
-## Le multiplexeur n'a pas de date de livraison
+## Le multiplexeur n'avait pas de date de livraison
 
-**Le risque.** `B07TXPQ2VM` est la seule commande sans date annoncée. Elle
-bloque [O2](/objectifs/o2-multiplexage/).
+**Statut : levé.** Le CD74HC4067 est arrivé et ses barrettes sont soudées.
 
-**Ce qu'on fait.** Rien : le chemin `O1 → O4` ne passe pas par le multiplexeur.
-Si le colis tarde, on avance sur le lien radio avec une sonde unique, et O2
-s'intercalera quand le matériel arrivera. C'est exactement ce que montre le
-graphe de la [feuille de route](/projet/feuille-de-route/#le-graphe).
+**Le risque, tel qu'il se posait.** `B07TXPQ2VM` était la seule commande sans
+date annoncée, et elle bloquait [O2](/objectifs/o2-multiplexage/).
+
+**Ce qu'on a fait, et qui a marché.** Rien attendu : le chemin `O1 → O4` ne
+passe pas par le multiplexeur. On a avancé sur le lien radio avec une sonde
+unique — [O4](/objectifs/o4-lien-radio/) est tenu — et O2 s'intercale
+maintenant que le matériel est là. C'est exactement ce que montrait le graphe de
+la [feuille de route](/projet/feuille-de-route/#le-graphe), et c'est la preuve
+qu'ordonner les objectifs par dépendance réelle plutôt que par numéro fait
+gagner du temps.
 
 ## Ne jamais alimenter la carte sans antenne
 
