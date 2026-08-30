@@ -247,7 +247,18 @@ static void question_decalage() {
 //
 // Le test n'a de sens que si deux canaux lisent des valeurs très différentes :
 // une sonde dans l'eau et une à l'air libre. Sinon il n'y a rien à contaminer.
-static void question_diaphonie(const float *repos) {
+// Un canal porte une sonde s'il rend une valeur haute ET REPRODUCTIBLE après
+// être passé par ailleurs. Une entrée en l'air ne retrouve pas sa valeur ;
+// une sonde, si.
+static bool canal_porte_une_sonde(int canal, float *valeur) {
+  float a = lire_canal_repose(canal);
+  lire_canal_repose((canal + 1) % 16);  // forcer la sortie à changer d'état
+  float b = lire_canal_repose(canal);
+  *valeur = (a + b) / 2.0f;
+  return a > SEUIL_SONDE && b > SEUIL_SONDE && fabsf(a - b) < 100.0f;
+}
+
+static void question_diaphonie() {
   Serial.println();
   Serial.println("--- 2 et 3. Diaphonie apres changement de canal ---");
 
@@ -255,9 +266,15 @@ static void question_diaphonie(const float *repos) {
   // Prendre une entree en l'air comme extremite donnerait un ecart magnifique
   // et un resultat vide : on mesurerait la derive d'une entree flottante, pas
   // une contamination entre canaux.
+  //
+  // Et le seuil ne suffit pas a les distinguer. Une entree en l'air se charge :
+  // le canal 0 vide a ete lu a 734 en phase de reference, a 91 au balayage,
+  // puis a 139 et 1394 dans la meme execution. C'est la STABILITE qui separe
+  // une sonde d'un fil en l'air, pas le niveau.
+  float repos[N_CANAUX];
   int bas = -1, haut = -1;
   for (int i = 0; i < N_CANAUX; i++) {
-    if (repos[i] <= SEUIL_SONDE) continue;
+    if (!canal_porte_une_sonde(CANAUX[i], &repos[i])) continue;
     if (bas < 0 || repos[i] < repos[bas]) bas = i;
     if (haut < 0 || repos[i] > repos[haut]) haut = i;
   }
@@ -368,7 +385,7 @@ void setup() {
   balayer_tous_les_canaux(vide);
 
   question_decalage();
-  question_diaphonie(repos);
+  question_diaphonie();
 
   alimenter_sondes(false);
 
