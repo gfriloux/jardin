@@ -73,6 +73,69 @@ static void alimenter_sondes(bool actif) {
   if (actif) delay(STABILISATION_MS);
 }
 
+// --- Vérification du montage, avant toute mesure ---------------------------
+//
+// Ce croquis a d'abord été écrit sans ce contrôle, et il a annoncé « écart
+// moyen : -2316 points » avec l'aplomb d'une mesure, alors que le module
+// n'était simplement pas en service. Un résultat faux qui a l'air d'un
+// résultat coûte plus cher qu'une panne franche.
+//
+// Deux symptômes suffisent à distinguer un montage muet d'une vraie mesure.
+//
+// Rend true si le montage est exploitable.
+static bool verifier_montage(const float *repos, float vide) {
+  bool ok = true;
+
+  // 1. Un canal câblé qui lit comme un canal non câblé ne reçoit rien.
+  //    Une sonde dans l'eau donne ~875, à l'air ~2600 : le seuil est large.
+  for (int i = 0; i < N_CANAUX; i++) {
+    if (fabsf(repos[i] - vide) < 50.0f) {
+      Serial.printf("  canal %d (%.0f) est indiscernable du canal 15 non "
+                    "cable (%.0f)\n",
+                    CANAUX[i], repos[i], vide);
+      ok = false;
+    }
+  }
+
+  // 2. Une sortie qui flotte donne une valeur différente selon le canal d'où
+  //    l'on vient, parce qu'elle dépend de la charge résiduelle. Une liaison
+  //    réelle, elle, ne dépend pas du chemin.
+  float mini = 4095.0f, maxi = 0.0f;
+  for (int depuis = 0; depuis < N_CANAUX; depuis++) {
+    mux_selectionner(CANAUX[depuis]);
+    delay(REPOS_MS);
+    float v = lire_canal_repose(CANAUX[0]);
+    if (v < mini) mini = v;
+    if (v > maxi) maxi = v;
+  }
+  if (maxi - mini > 100.0f) {
+    Serial.printf("  canal 0 vaut entre %.0f et %.0f selon le canal d'ou "
+                  "l'on vient (%.0f points d'ecart)\n",
+                  mini, maxi, maxi - mini);
+    Serial.println("  -> la sortie flotte : les interrupteurs ne se ferment pas");
+    ok = false;
+  }
+
+  if (!ok) {
+    Serial.println();
+    Serial.println("  MONTAGE MUET — aucune mesure n'est exploitable.");
+    Serial.println();
+    Serial.println("  Le module n'est pas alimente, ou pas en service. Verifier");
+    Serial.println("  dans cet ordre, ce sont les trois derniers fils du schema :");
+    Serial.println("    1. VCC du module  -> 3V3");
+    Serial.println("    2. GND du module  -> GND  (distincte de celle des sondes)");
+    Serial.println("    3. EN du module   -> GPIO 5");
+    Serial.println();
+    Serial.println("  EN est ACTIF A L'ETAT BAS : en l'air il est vu haut, donc");
+    Serial.println("  inhibe, et tous les canaux restent ouverts.");
+    Serial.println();
+    Serial.println("  Sur breadboard, la rainure centrale coupe tout : un fil en");
+    Serial.println("  10a et l'autre en 10f ne sont pas relies, et ca ne se voit pas.");
+  }
+
+  return ok;
+}
+
 // --- Question 1 : le multiplexeur décale-t-il les valeurs ? ----------------
 //
 // Même sonde, même terre, même instant, deux chemins. Tout ce qui varie d'une
@@ -214,6 +277,19 @@ void setup() {
   // reconnaître une sonde débranchée d'une sonde qui lit vraiment.
   float vide = lire_canal_repose(15);
   Serial.printf("  canal 15 (non cable) : %.1f\n", vide);
+
+  Serial.println();
+  Serial.println("--- Verification du montage ---");
+  if (!verifier_montage(repos, vide)) {
+    alimenter_sondes(false);
+    Serial.println();
+    Serial.println("Corriger le cablage, puis relancer. Le suivi continu");
+    Serial.println("ci-dessous aide a trouver le fil fautif : un canal doit");
+    Serial.println("bouger quand on sort SA sonde de l'eau, et lui seul.");
+    Serial.println();
+    return;  // on ne mesure pas un montage muet
+  }
+  Serial.println("  OK — les canaux recoivent, la sortie ne flotte pas.");
 
   question_decalage();
   question_diaphonie(repos);
