@@ -231,7 +231,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  COALESCE(sensor_uid, CONCAT(node_uid, '/', channel)) AS metric,\n  AVG(value)                                           AS 'ADC brut'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\nGROUP BY 1, 2\nORDER BY 1",
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  COALESCE(point_label, CONCAT(node_uid, '/', channel)) AS metric,\n  AVG(value)                                           AS 'ADC brut'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\nGROUP BY 1, 2\nORDER BY 1",
           "editorMode": "code"
         }
       ]
@@ -290,7 +290,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  sensor_uid       AS metric,\n  AVG(moisture_pct) AS 'Humidite'\nFROM v_soil_moisture\nWHERE $__timeFilter(received_at)\n  AND moisture_pct IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  point_label      AS metric,\n  AVG(moisture_pct) AS 'Humidite'\nFROM v_soil_moisture\nWHERE $__timeFilter(received_at)\n  AND moisture_pct IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
           "editorMode": "code"
         }
       ]
@@ -358,7 +358,7 @@
           },
           "format": "time_series",
           "rawQuery": true,
-          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  CONCAT(depth_cm, ' cm') AS metric,\n  MAX(value) - MIN(value) AS 'Ecart max-min'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\n  AND sensor_uid IS NOT NULL\n  AND depth_cm IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
+          "rawSql": "SELECT\n  $__timeGroupAlias(received_at, $__interval),\n  CONCAT(depth_cm, ' cm') AS metric,\n  MAX(value) - MIN(value) AS 'Ecart max-min'\nFROM v_measurement\nWHERE $__timeFilter(received_at)\n  AND measurement_type = 'soil_moisture'\n  AND point_label IS NOT NULL\n  AND depth_cm IS NOT NULL\nGROUP BY 1, 2\nORDER BY 1",
           "editorMode": "code"
         }
       ]
