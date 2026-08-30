@@ -14,6 +14,17 @@ l'allée de fraisiers.
 **Dépend de.** [O6](/objectifs/o6-autonomie/) · **Débloque.**
 [O8](/objectifs/o8-exploitation/)
 
+:::note[C'est ici que le modèle de données se juge pour de bon]
+[O5](/objectifs/o5-chaine-de-donnees/) demandait initialement une semaine de
+mesures. Elle en a été retirée : sur une table, avec une sonde dans un verre
+d'eau, une semaine ne produit qu'une ligne plate — et on ne juge pas si une
+architecture est agréable à exploiter sur une ligne plate.
+
+Ce mois-ci l'absorbe entièrement, et sur des données qui disent enfin quelque
+chose. C'est lui qui produira la première **courbe d'assèchement réelle**, dont
+[O8](/objectifs/o8-exploitation/) a besoin pour poser des seuils défendables.
+:::
+
 C'est l'objectif où le POC devient une V1, et où plusieurs décisions provisoires
 arrivent à échéance :
 [ADR-004](/decisions/#adr-004--deux-cartes-identiques-pas-de-passerelle-lorawan)

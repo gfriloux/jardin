@@ -10,13 +10,44 @@ sidebar:
 
 **La question.** Est-ce que l'architecture de données est agréable à exploiter ?
 
-**Critère de sortie.** Une semaine de mesures visible dans Grafana, chaque
-mesure correctement rattachée à sa sonde et à sa zone, et l'index reconstructible
-depuis l'archive par simple réimport.
+**Critère de sortie.** Quatre choses, toutes vérifiables en une séance :
+
+1. une trame partie de la radio arrive dans Grafana, rattachée à son point de
+   mesure et à sa zone ;
+2. l'index se reconstruit **entièrement** depuis l'archive par simple réimport ;
+3. la chaîne survit à ce qui va lui arriver — nœud muet, ligne d'archive
+   illisible, collecteur relancé, changement de mois ;
+4. les quatre questions ouvertes ci-dessous sont tranchées.
 
 **Dépend de.** [O3](/objectifs/o3-calibration/) et
 [O4](/objectifs/o4-lien-radio/) · **Débloque.**
 [O6](/objectifs/o6-autonomie/)
+
+:::note[Le critère demandait « une semaine de mesures ». Il ne le demande plus]
+La formulation initiale datait d'avant que la chaîne existe : une semaine de
+données servait de preuve indirecte que tout tenait ensemble. Maintenant que
+tout a tourné, elle ne prouverait plus grand-chose.
+
+**Ce que la semaine aurait apporté** tient en trois points, et aucun ne vaut
+sept jours : que le collecteur tienne dans la durée — 48 h le montrent aussi
+bien ; la bascule de fichier d'archive au changement de mois — qui arrive de
+toute façon ; et du volume — dont MariaDB ne s'apercevra pas.
+
+**Ce qu'elle n'aurait pas apporté**, en revanche, est précisément ce que O5
+cherche. Les sondes sont sur une table, l'une dans un verre d'eau : une semaine
+de ça produit une ligne plate, et on n'exploite pas une ligne plate. La question
+« cette architecture est-elle agréable à exploiter » a besoin de données qui
+disent quelque chose, pas de données nombreuses.
+
+**La semaine de mesures réelles est donc déplacée dans
+[O7](/objectifs/o7-mise-au-jardin/)**, où les sondes seront en terre. Elle n'y
+coûte rien de plus — c'est ce que O7 fait de toute façon — et elle y produira
+enfin une courbe d'assèchement, qui est ce dont [O8](/objectifs/o8-exploitation/)
+a besoin.
+
+Reste que les quatre questions ouvertes de cet objectif sont toutes des
+questions de **conception**, et qu'aucune ne se répond en attendant.
+:::
 
 ## La chaîne
 
