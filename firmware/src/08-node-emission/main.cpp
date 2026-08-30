@@ -41,21 +41,23 @@ static const uint8_t RADIO_SYNCWORD = 0x12;
 // Le garde-fou est donc calculé, pas deviné : RadioLib sait dire le temps
 // d'antenne exact d'une charge utile donnée, et on attend cent fois ça.
 //
-// ABAISSÉ POUR LA CAMPAGNE DE PORTÉE DE O4 — à remettre à 60000 après.
+// Le plancher de 60 s s'applique par-dessus le calcul légal : à SF7 une trame
+// de 71 octets autoriserait de réémettre toutes les treize secondes, ce qui est
+// légal mais inutile pour du sol qui bouge à l'échelle de l'heure. Émettre plus
+// souvent ne coûte pas que de la batterie, ça remplit l'archive de points qui
+// n'apprennent rien.
 //
-// En exploitation, le plancher vaut 60 s : à SF7 une petite trame autoriserait
-// de réémettre toutes les douze secondes, ce qui est légal mais inutile pour du
-// sol qui bouge à l'échelle de l'heure.
+// Il a été abaissé à 10000 le 30 août 2026, le temps de la campagne de portée
+// de O4, où le raisonnement s'inverse : mesurer un taux de perte demande cent
+// trames par position, et à 60 s cela coûte 1 h 40 par position contre 20
+// minutes en laissant le calcul légal commander. La campagne est close, le
+// plancher est revenu à sa valeur d'exploitation.
 //
-// Pendant la campagne, ce raisonnement s'inverse : il faut cent trames par
-// position pour mesurer un taux de perte, et à 60 s cela coûte 1 h 40 par
-// position. Le calcul légal reprend donc la main (~12 s pour une trame de
-// 70 octets à SF7), et la position se mesure en 20 minutes.
-//
-// Le plancher n'est pas mis à zéro pour autant : il reste un filet contre un
-// getTimeOnAir() qui renverrait 0. Sans lui, une seule valeur aberrante ferait
-// émettre en continu — illégalement, et sans que rien ne le signale.
-static const uint32_t PERIODE_PLANCHER_MS = 10000;
+// Si une nouvelle campagne l'exigeait, le rabaisser — mais jamais à zéro : le
+// plancher reste un filet contre un getTimeOnAir() qui renverrait 0. Sans lui,
+// une seule valeur aberrante ferait émettre en continu, illégalement, et sans
+// que rien ne le signale.
+static const uint32_t PERIODE_PLANCHER_MS = 60000;
 static const uint32_t RAPPORT_CYCLIQUE = 100;  // 1 % => attendre 100x le temps d'antenne
 
 // --- Mesure ----------------------------------------------------------------

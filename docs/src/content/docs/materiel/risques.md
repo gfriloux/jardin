@@ -231,9 +231,12 @@ garde-fou qui refuse d'émettre trop tôt.
 Le garde-fou est **calculé et non deviné** : le nœud demande à RadioLib le temps
 d'antenne réel de la trame qu'il vient d'émettre et attend cent fois cette
 durée. En campagne, l'intervalle constaté tourne autour de **14 s** pour une
-trame de 71 octets à SF7, soit ~140 ms de temps d'antenne. Un plancher s'applique
-par-dessus — 60 s en exploitation, abaissé à 10 s le temps d'une campagne de
-portée.
+trame de 71 octets à SF7, soit ~140 ms de temps d'antenne.
+
+Un plancher de **60 s** s'applique par-dessus, pour l'exploitation courante : le
+sol bouge à l'échelle de l'heure, émettre toutes les quatorze secondes ne
+remplirait l'archive que de points qui n'apprennent rien. Il n'est abaissé que
+le temps d'une campagne de mesure, et jamais jusqu'à zéro.
 
 ## Les straps Dupont ne sont pas des câbles
 

@@ -126,19 +126,19 @@ L'ordre de grandeur est confirmé par la campagne, dont l'intervalle constaté
 tourne autour de 14 s. Le chiffre exact est celui qu'affiche le nœud, sur sa
 propre liaison série — la passerelle ne le voit pas.
 
-:::caution[Le plancher est abaissé pendant la campagne, et doit être remis]
+:::note[Le plancher a été abaissé le temps de la campagne, puis remis]
 Mesurer un taux de perte demande cent trames par position. À 60 s l'une, cela
 fait **1 h 40 par position** — une journée entière pour cinq positions, ce qui
-condamne la campagne avant qu'elle commence.
+condamnait la campagne avant qu'elle commence.
 
 `PERIODE_PLANCHER_MS` est donc passé de 60000 à **10000** le temps de la
-campagne : le calcul légal reprend la main (~14 s constatés) et une position se
-mesure en vingt minutes. Le plancher n'est pas mis à zéro pour autant — il reste
-un filet contre un `getTimeOnAir()` qui renverrait 0, cas où le nœud émettrait
-en continu, illégalement, sans que rien ne le signale.
+campagne : le calcul légal reprenait la main (~14 s constatés) et une position
+se mesurait en vingt minutes. Le plancher n'a pas été mis à zéro pour autant —
+il reste un filet contre un `getTimeOnAir()` qui renverrait 0, cas où le nœud
+émettrait en continu, illégalement, sans que rien ne le signale.
 
-**À remettre à 60000 une fois la campagne close.** Le commentaire du fichier le
-rappelle.
+**La campagne close, il est revenu à 60000.** Le rabaisser est légitime pour une
+nouvelle campagne, jamais pour l'exploitation courante.
 :::
 
 ### La taille de trame, tranchée avant d'aller marcher
