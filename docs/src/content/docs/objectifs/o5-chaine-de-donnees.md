@@ -3,6 +3,9 @@ title: O5 — La chaîne de données
 description: De la liaison série à Grafana, en passant par une archive brute et MariaDB.
 sidebar:
   order: 5
+  badge:
+    text: Prêt
+    variant: note
 ---
 
 **La question.** Est-ce que l'architecture de données est agréable à exploiter ?

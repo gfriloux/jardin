@@ -3,6 +3,9 @@ title: O2 — Passer à N sondes
 description: Franchir la limite des quatre entrées analogiques, sans confondre les sondes.
 sidebar:
   order: 2
+  badge:
+    text: Prêt
+    variant: note
 ---
 
 **La question.** Est-ce qu'un nœud peut lire plus de quatre sondes sans les

@@ -3,6 +3,9 @@ title: O4 — Le lien radio
 description: Une trame LoRa qui part du fond du jardin et arrive sur le PC.
 sidebar:
   order: 4
+  badge:
+    text: Tenu
+    variant: success
 ---
 
 **La question.** Est-ce que LoRa porte correctement depuis le jardin, et avec
