@@ -39,11 +39,23 @@ static const uint8_t RADIO_SYNCWORD = 0x12;
 // illégale, et fausse en plus la campagne de portée, la radio chauffant.
 //
 // Le garde-fou est donc calculé, pas deviné : RadioLib sait dire le temps
-// d'antenne exact d'une charge utile donnée, et on attend cent fois ça. Le
-// plancher de 60 s s'applique par-dessus, parce qu'à SF7 une petite trame
-// autoriserait de réémettre toutes les six secondes — légal, mais inutile pour
-// du sol qui bouge à l'échelle de l'heure.
-static const uint32_t PERIODE_PLANCHER_MS = 60000;
+// d'antenne exact d'une charge utile donnée, et on attend cent fois ça.
+//
+// ABAISSÉ POUR LA CAMPAGNE DE PORTÉE DE O4 — à remettre à 60000 après.
+//
+// En exploitation, le plancher vaut 60 s : à SF7 une petite trame autoriserait
+// de réémettre toutes les douze secondes, ce qui est légal mais inutile pour du
+// sol qui bouge à l'échelle de l'heure.
+//
+// Pendant la campagne, ce raisonnement s'inverse : il faut cent trames par
+// position pour mesurer un taux de perte, et à 60 s cela coûte 1 h 40 par
+// position. Le calcul légal reprend donc la main (~12 s pour une trame de
+// 70 octets à SF7), et la position se mesure en 20 minutes.
+//
+// Le plancher n'est pas mis à zéro pour autant : il reste un filet contre un
+// getTimeOnAir() qui renverrait 0. Sans lui, une seule valeur aberrante ferait
+// émettre en continu — illégalement, et sans que rien ne le signale.
+static const uint32_t PERIODE_PLANCHER_MS = 10000;
 static const uint32_t RAPPORT_CYCLIQUE = 100;  // 1 % => attendre 100x le temps d'antenne
 
 // --- Mesure ----------------------------------------------------------------
