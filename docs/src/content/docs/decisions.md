@@ -533,3 +533,73 @@ calibration par sonde que O3 envisageait.
 **Ce qui la changerait.** Rien de prévisible. Si un jour un seuil unique
 suffisait à tout le jardin, le réglage par zone resterait compatible — il
 serait simplement partout identique.
+
+## ADR-017 — On déclare des points de mesure, pas des sondes
+
+**Statut :** ✅ actée · 30 août 2026
+
+**Contexte.** Le schéma distinguait trois objets : le nœud, la **sonde** en tant
+qu'objet physique, et la voie sur laquelle elle est branchée. Deux tables de
+liaison datées reliaient les trois, et le modèle de données imposait une règle
+de survie : écrire le `uid` de chaque sonde **sur la sonde**, au marqueur
+indélébile, faute de quoi les mesures ne seraient plus attribuables.
+
+La première déclaration réelle, le 30 août 2026, a mis cette règle à l'épreuve
+et elle n'a pas tenu.
+
+**Décision.** La sonde cesse d'être un objet suivi. On déclare des **points de
+mesure** : une voie d'un nœud, avec son nom d'affichage et sa zone, daté.
+
+Les tables `sensor`, `sensor_attachment` et `sensor_placement` disparaissent au
+profit d'une seule, `measurement_point`.
+
+**Pourquoi.**
+
+- **Les sondes sont interchangeables, et c'est mesuré.**
+  [O3](/objectifs/o3-calibration/#résultats) a relevé 7,8 points de divergence
+  maximale entre les trois — et a montré que cet écart n'est *même pas
+  attribuable aux sondes*, puisque leur classement s'inverse entre deux milieux.
+  Leur donner une identité prétendait distinguer des objets démontrés
+  indistinguables.
+- **Un identifiant invérifiable est pire que pas d'identifiant.** Tant que
+  l'étiquette n'est pas physiquement sur l'objet, la déclaration est une
+  fiction — mais une fiction qui a l'autorité d'une ligne en base.
+- **On change un pneu sans le baptiser.** Le remplacement d'une sonde morte est
+  une opération d'entretien, pas un événement de modélisation. Exiger une
+  écriture SQL et un coup de marqueur à chaque remplacement, c'est une corvée
+  récurrente pour une information que personne n'ira lire.
+
+**Le contre-argument, et pourquoi il n'a pas emporté la décision.** Une sonde
+neuve remplaçant une sonde vieillie peut produire un décrochage franc dans la
+série — et sur une courbe, un remplacement de sonde ressemble à un assèchement
+brutal. Les 7,8 points de O3 ne couvrent pas ce cas : ils ont été mesurés entre
+trois sondes **neuves**.
+
+L'objection est réelle, mais elle ne justifie pas de suivre les sondes : la date
+du recâblage suffit à expliquer le décrochage, et elle tombe gratuitement de
+`measurement_point.valid_from`. On garde le fait utile sans l'objet inutile.
+
+**Conséquences.**
+
+- **Les dates restent, et changent de sens.** Elles ne suivent plus du matériel
+  mais du **câblage**. Sans elles, déclarer une voie dans une nouvelle zone
+  réattribuerait tout l'historique passé à cette zone, silencieusement.
+- **Le type de mesure ne se déclare pas sur le point.** Il se déduit du nom de
+  la voie via `channel_convention` — `soil-` donne `soil_moisture`. Le redire
+  sur le point créerait deux sources de vérité capables de diverger sans que
+  rien ne le signale.
+- **La calibration porte sur le point**, plus sur la sonde. C'est d'ailleurs
+  plus juste depuis [l'ADR-015](#adr-015--on-détecte-un-seuil-on-ne-mesure-pas-une-humidité) :
+  ce qui se calibre est « cette voie, à cet endroit », ce qui inclut le sol
+  autant que l'électronique.
+- **L'intégrité se simplifie.** Il n'y a plus qu'une règle de non-chevauchement
+  à tenir — une voie déclarée deux fois — là où il en fallait deux.
+- **Le collecteur n'a pas bougé d'une ligne.** Il ne connaît que des voies, et
+  n'a jamais touché ces tables. L'archive NDJSON non plus. Le changement s'est
+  fait par `db-reset` et réimport, sans migration.
+
+**Ce qui la changerait.** Des capteurs réellement distinguables — un
+pluviomètre, une sonde de température, un débitmètre — dont l'exemplaire compte
+parce qu'ils se réparent, se réétalonnent ou se garantissent. Le modèle actuel
+ne l'interdit pas : il faudrait alors réintroduire une identité d'objet, mais
+seulement pour ces capteurs-là, et pour une raison qu'on saurait nommer.

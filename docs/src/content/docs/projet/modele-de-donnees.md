@@ -1,6 +1,6 @@
 ---
 title: Modèle de données
-description: La trame radio, l'archive NDJSON et le schéma SQL — sondes, cartes LoRa, zones, et les liaisons datées entre elles.
+description: La trame radio, l'archive NDJSON et le schéma SQL — cartes LoRa, points de mesure, zones, et le câblage daté qui les relie.
 sidebar:
   order: 4
 ---
@@ -26,12 +26,15 @@ base — **rejouable de bout en bout**, ce qui rend la base jetable.
 Tout ce qui traverse le système se réduit à :
 
 ```text
-node_id  sensor_id  timestamp             measurement_type  value   unit
+node_id  channel    timestamp             measurement_type  value   unit
 ─────────────────────────────────────────────────────────────────────────
 NODE-001 soil-01    2026-08-20T12:00:00Z  soil_moisture     1834    raw
 NODE-001 soil-02    2026-08-20T12:00:00Z  soil_moisture     1921    raw
 NODE-001 battery    2026-08-20T12:00:00Z  voltage           4.87    V
 ```
+
+La deuxième colonne est une **voie**, pas une sonde : `soil-01` est une prise
+sur la carte, pas l'objet qui y est branché.
 
 Le mot « humidité » n'apparaît **pas** dans le protocole. `soil_moisture` est
 une valeur de `measurement_type` parmi d'autres, et son `unit` reste `raw` tant
@@ -65,42 +68,48 @@ deviendra nécessaire quand le nombre de nœuds augmentera — pas avant.
 
 ## La distinction qui structure tout le schéma
 
-Trois objets physiques différents, souvent confondus :
+Deux objets déclarés, et une chose qu'on ne déclare **pas** :
 
 | Objet | Ce que c'est |
 |---|---|
 | **node** | une carte LoRa. Elle émet son identifiant. |
-| **sensor** | une sonde. Un objet qu'on tient dans la main, qu'on étiquette, qu'on débranche et rebranche ailleurs. |
-| **channel** | la voie sur laquelle une sonde est branchée. `soil-01` **n'est pas une sonde** : c'est une prise. |
+| **measurement_point** | une voie de mesure : ce qui est branché sur `NODE-001/soil-01`, comment ça s'appelle à l'écran, et dans quelle zone ça se trouve. |
+| ~~sensor~~ | **rien.** La sonde n'est pas un objet suivi — voir [ADR-017](/decisions/#adr-017--on-déclare-des-points-de-mesure-pas-des-sondes). |
 
-`NODE-001/soil-01` et `NODE-002/soil-01` sont deux prises différentes, et la
-même sonde peut passer de l'une à l'autre. D'où une **table de liaison datée**
-plutôt qu'une clé étrangère directe.
+`NODE-001/soil-01` et `NODE-002/soil-01` sont deux voies différentes, et chacune
+peut changer de zone ou de rôle dans le temps. D'où une **table datée** plutôt
+qu'une clé étrangère directe.
 
 ```mermaid
 erDiagram
-    node ||--o{ sensor_attachment : "porte"
-    sensor ||--o{ sensor_attachment : "est branchée via"
-    sensor ||--o{ sensor_placement : "est implantée via"
-    zone ||--o{ sensor_placement : "contient"
-    sensor ||--o{ calibration : "est calibrée par"
+    node ||--o{ measurement_point : "porte"
+    zone ||--o{ measurement_point : "contient"
+    measurement_point ||--o{ calibration : "est calibré par"
     node ||--o{ frame : "émet"
     frame ||--o{ measurement : "porte"
 ```
 
-Les tables de faits — `frame` et `measurement` — **ne référencent aucune
-sonde**. Une trame ne connaît que des voies. L'attribution à une sonde physique
-se fait **à la lecture**, par jointure temporelle.
+Les tables de faits — `frame` et `measurement` — **ne référencent aucun point**.
+Une trame ne connaît que des voies. L'attribution se fait **à la lecture**, par
+jointure temporelle.
 
-C'est ce qui permet de déplacer une sonde sans réécrire une seule ligne
-d'historique :
+C'est ce qui permet de recâbler sans réécrire une seule ligne d'historique :
 
 ```text
-SOIL-A3, mesure du 20 août   →  NODE-001 / soil-03 / zone FRAISIERS
-SOIL-A3, mesure du 5 sept.   →  NODE-002 / soil-01 / zone POTAGER
+NODE-001 / soil-01, mesure du 20 août  →  « Fraisiers — humidité », zone FRAISIERS
+NODE-001 / soil-01, mesure du 5 sept.  →  « Potager — humidité »,   zone POTAGER
 ```
 
 Les deux restent correctement attribuées, pour toujours.
+
+:::note[Le type de mesure ne se déclare pas ici]
+Il se déduit du **nom de la voie**, via la table `channel_convention` :
+`soil-` donne `soil_moisture`, `battery` donne `voltage`, le préfixe le plus
+long l'emportant. C'est le nom que le nœud émet qui porte l'information.
+
+Le redéclarer sur le point de mesure créerait deux sources de vérité capables
+de diverger sans que rien ne le signale.
+:::
 
 ## Les zones
 
@@ -253,18 +262,25 @@ rejouer toute l'archive ne crée aucun doublon.
 L'archive est délibérément **hors volume Docker** : elle doit survivre à un
 `docker compose down -v` distrait, et rester sauvegardable avec un simple `cp`.
 
-## Déclarer son matériel
+## Déclarer son câblage
 
-Rien n'est découvert automatiquement : les nœuds, les sondes et leurs liaisons
-se déclarent à la main. Un modèle commenté est fourni dans
-`stack/mariadb/declarations.example.sql`.
+Rien n'est découvert automatiquement : les nœuds, les zones et les points de
+mesure se déclarent à la main, dans
+`stack/mariadb/schema/006-declarations.sql`.
+
+Ce fichier vit dans `docker-entrypoint-initdb.d` pour une raison précise :
+c'est la **seule** partie de la base qui ne se reconstruit pas depuis l'archive
+NDJSON. Ailleurs, un `just db-reset` effacerait des déclarations qu'aucun
+réimport ne pourrait rejouer, et les mesures redeviendraient orphelines archive
+intacte.
 
 :::tip[La règle de survie]
-Le `uid` d'une sonde doit être **écrit sur la sonde**, au marqueur indélébile,
-avant de la mettre en terre. Sans étiquetage physique, le jour où deux sondes
-divergent, plus rien n'est attribuable.
-:::
-
-Et pour déplacer une sonde : ne jamais modifier la ligne existante. On la
+Pour recâbler une voie : **ne jamais modifier la ligne existante**. On la
 **clôt** (`valid_to`) et on en ouvre une nouvelle. Modifier réattribuerait tout
 l'historique, rétroactivement et sans le dire.
+:::
+
+En revanche, **remplacer une sonde morte ne demande rien**. C'est la même voie,
+au même endroit, qui mesure la même chose : aucune ligne de SQL, aucune
+étiquette à coller. On change un pneu sans le baptiser — voir
+[ADR-017](/decisions/#adr-017--on-déclare-des-points-de-mesure-pas-des-sondes).
