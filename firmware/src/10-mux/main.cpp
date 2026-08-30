@@ -43,6 +43,13 @@ static const int ECHANTILLONS = 64;
 static const int DELAIS_MS[] = {0, 1, 2, 5, 10, 20, 50};
 static const int N_DELAIS = sizeof(DELAIS_MS) / sizeof(DELAIS_MS[0]);
 
+// Au-dessus de ce seuil, un canal porte une sonde ; en dessous, il est en
+// l'air. Le fond d'une entrée non câblée se promène entre 75 et 170 selon la
+// lecture, quand la sonde la plus mouillée observée donnait 580. Le seuil est
+// absolu et non relatif à une mesure du fond : caler le critère sur une seule
+// lecture du canal 15 faisait passer tout le bruit pour des sondes.
+static const float SEUIL_SONDE = 300.0f;
+
 // Sélectionne un canal en écrivant son numéro en binaire sur les quatre fils
 // d'adresse. Canal 5 = 0101 = S3 bas, S2 haut, S1 bas, S0 haut.
 static void mux_selectionner(int canal) {
@@ -97,13 +104,15 @@ static void balayer_tous_les_canaux(float vide) {
 
   for (int c = 0; c < 16; c++) {
     float v = lire_canal_repose(c);
-    bool actif = fabsf(v - vide) > 50.0f;
-    Serial.printf("  C%-2d %8.1f %s", c, v, actif ? "<-- sonde" : "");
+    Serial.printf("  C%-2d %8.1f %s", c, v, v > SEUIL_SONDE ? "<-- sonde" : "");
     // Rappel de ce qu'il faut pour atteindre ce canal, pour que la lecture
     // du tableau dise directement quel fil d'adresse est en cause.
     if (c == 4) Serial.print("   (exige S2)");
     if (c == 8) Serial.print("   (exige S3)");
     if (c == 12) Serial.print("   (exige S2 et S3)");
+    // Une sonde capacitive alimentee en 3,3 V plafonne vers 2,8 V a l'air
+    // libre. Au-dela, ce n'est plus une mesure de sol.
+    if (v > 3100.0f) Serial.print("   ?? au-dessus de l'air libre");
     Serial.println();
   }
 }
@@ -181,6 +190,22 @@ static void question_decalage() {
   Serial.println();
   Serial.println("--- 1. Decalage introduit par le multiplexeur ---");
   Serial.println("Sonde du canal 0, lue en direct (GPIO 2) et via le mux.");
+
+  // La comparaison n'a de sens que si le fil de GPIO 2 et l'entree C0 pointent
+  // bien la MEME sonde. Deplacer cette sonde ailleurs — pour eprouver S2 ou S3,
+  // par exemple — casse l'hypothese sans rien casser de visible, et la mesure
+  // devient un ecart entre une sonde et une entree en l'air. C'est arrive.
+  float direct = lire_moyenne(PIN_SOIL_SIG_DIRECT, ECHANTILLONS);
+  float via_mux = lire_canal_repose(0);
+  if (fabsf(via_mux - direct) > 0.2f * direct) {
+    Serial.println();
+    Serial.printf("  IGNORE : direct = %.0f mais C0 = %.0f.\n", direct, via_mux);
+    Serial.println("  La sonde lue par GPIO 2 n'est pas branchee sur C0, donc");
+    Serial.println("  ces deux valeurs ne decrivent pas le meme capteur et leur");
+    Serial.println("  difference ne mesure rien. Remettre le fil sur C0.");
+    return;
+  }
+
   Serial.println();
   Serial.println("  essai   direct     mux    ecart");
 
@@ -223,15 +248,27 @@ static void question_decalage() {
 // Le test n'a de sens que si deux canaux lisent des valeurs très différentes :
 // une sonde dans l'eau et une à l'air libre. Sinon il n'y a rien à contaminer.
 static void question_diaphonie(const float *repos) {
-  // Le canal le plus haut et le plus bas : la pire contamination possible.
-  int bas = 0, haut = 0;
-  for (int i = 1; i < N_CANAUX; i++) {
-    if (repos[i] < repos[bas]) bas = i;
-    if (repos[i] > repos[haut]) haut = i;
-  }
-
   Serial.println();
   Serial.println("--- 2 et 3. Diaphonie apres changement de canal ---");
+
+  // Le canal le plus haut et le plus bas PARMI CEUX QUI PORTENT UNE SONDE.
+  // Prendre une entree en l'air comme extremite donnerait un ecart magnifique
+  // et un resultat vide : on mesurerait la derive d'une entree flottante, pas
+  // une contamination entre canaux.
+  int bas = -1, haut = -1;
+  for (int i = 0; i < N_CANAUX; i++) {
+    if (repos[i] <= SEUIL_SONDE) continue;
+    if (bas < 0 || repos[i] < repos[bas]) bas = i;
+    if (haut < 0 || repos[i] > repos[haut]) haut = i;
+  }
+
+  if (bas < 0 || bas == haut) {
+    Serial.println();
+    Serial.println("  IGNORE : il faut au moins deux canaux portant une sonde");
+    Serial.println("  parmi C0, C1 et C2. Y rebrancher les sondes deplacees.");
+    return;
+  }
+
   Serial.printf("Canal %d (%.0f) et canal %d (%.0f), ecart de %.0f points.\n",
                 CANAUX[bas], repos[bas], CANAUX[haut], repos[haut],
                 repos[haut] - repos[bas]);
