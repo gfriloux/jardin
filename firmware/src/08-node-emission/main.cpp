@@ -164,6 +164,25 @@ void loop() {
     return;
   }
 
+  // `seq` compte les TENTATIVES, pas les succès, et s'incrémente donc quoi
+  // qu'il advienne de l'émission.
+  //
+  // Il comptait les succès jusqu'au 30 août 2026, et c'était faux : mesuré,
+  // `transmit()` rend parfois un code d'erreur alors que la trame est bien
+  // partie — un délai d'attente interne, la marge étant mince (128 ms de temps
+  // d'antenne pour 136 ms d'émission constatés). Le nœud croyait avoir échoué,
+  // ne comptait pas la trame, et réémettait le MÊME numéro au cycle suivant.
+  //
+  // La passerelle recevait alors deux fois `seq:0`, à quatorze secondes
+  // d'intervalle. Ce doublon a fini par casser le calcul de taux de perte du
+  // tableau de bord, où (seq - precedent - 1) débordait par le bas.
+  //
+  // Compter les tentatives rend en prime le taux de perte honnête : un trou
+  // dans la séquence signifie qu'une trame n'est pas arrivée, ce qui est
+  // exactement la question posée. Un envoi réellement raté DOIT laisser un
+  // trou.
+  seq++;
+
   uint32_t debut = millis();
   int etat = radio.transmit((uint8_t *)trame, n);
   uint32_t duree = millis() - debut;
@@ -171,8 +190,9 @@ void loop() {
   if (etat == RADIOLIB_ERR_NONE) {
     Serial.print("emis : ");
     Serial.println(trame);
-    seq++;
   } else {
+    // Pas forcément un échec réel : la trame est peut-être partie quand même.
+    // C'est pour ça qu'on ne réémet pas le même numéro.
     Serial.print("echec d'emission, code ");
     Serial.println(etat);
   }

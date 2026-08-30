@@ -253,16 +253,41 @@ Le dépouillement compte les **`seq` distincts**, pas les lignes du journal :
 compter les lignes gonflerait le taux de réception, éventuellement au-delà de
 100 %.
 
-Ce n'est pas une précaution théorique. **`seq:0` est arrivé en double dans les
-deux journaux du 30 août**, à chaque mise sous tension du nœud — donc
-systématiquement, pas par accident. Le mécanisme n'est pas établi ; l'hypothèse
-la plus simple est que le premier `transmit()` rend un code d'erreur alors que
-la trame est bien partie : `seq` n'est alors pas incrémenté et la trame suivante
-repart avec le même numéro. Le nœud imprime `echec d'emission` dans ce cas, ce
-qui trancherait — mais sa liaison série n'était pas enregistrée.
+Ce n'est pas une précaution théorique. **`seq:0` est arrivé en double le 30
+août**, et le mécanisme a été établi le jour même.
 
-À vérifier en branchant les deux cartes sur deux terminaux, avant de compter sur
-`seq` pour un taux de perte fin.
+Ce qui a tranché : l'écart entre les deux réceptions, lu dans l'archive
+horodatée.
+
+```text
+seq 0   11:51:39.292 → 11:51:53.429   14 137 ms
+seq 0   12:33:35.913 → 12:33:50.020   14 107 ms
+```
+
+**Quatorze secondes**, soit exactement un cycle d'émission. Un double décodage
+d'une même transmission serait espacé de quelques millisecondes. Le nœud a donc
+réellement émis deux fois, à un cycle d'intervalle — ce qui n'arrive que si
+`seq` n'a pas bougé entre les deux.
+
+En cause : `transmit()` rend parfois un code d'erreur **alors que la trame est
+bien partie**. Un délai d'attente interne, la marge étant mince — 128 ms de
+temps d'antenne pour 136 ms d'émission constatés. Le nœud croyait avoir échoué,
+ne comptait pas la trame, et réémettait le même numéro.
+
+Le défaut est **intermittent** : deux occurrences sur plusieurs centaines de
+trames, et une session de diagnostic entière n'a pas suffi à le reproduire. La
+console du nœud seule ne pouvait donc pas conclure ; c'est l'horodatage de
+l'archive qui l'a fait.
+
+:::tip[Corrigé — `seq` compte les tentatives]
+`08-node-emission` incrémente désormais `seq` **avant** l'émission et quoi qu'il
+arrive. Chaque tentative porte un numéro distinct, donc plus de doublon
+possible.
+
+Effet de bord souhaitable : le taux de perte devient honnête. Un envoi
+réellement raté laisse un trou dans la séquence — ce qui est exactement
+l'information cherchée, là où l'ancien comptage la masquait.
+:::
 
 ## La trame
 
