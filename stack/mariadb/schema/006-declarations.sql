@@ -81,13 +81,39 @@ ON DUPLICATE KEY UPDATE
 -- portée a promené la sonde à la main. Ce sera le sujet de O7.
 -- ---------------------------------------------------------------------
 INSERT INTO measurement_point (node_id, channel, label, zone_id, valid_from, notes)
-SELECT n.id, 'soil-01', 'Fraisiers — humidité', z.id, '2026-08-30 00:00:00',
-       'Branchement direct sur GPIO 7, sans multiplexeur — montage de O1.'
-FROM node n, zone z
+SELECT n.id, v.channel, v.label, z.id, '2026-08-30 00:00:00', v.notes
+FROM node n, zone z, (
+            SELECT 'soil-01' AS channel, 'Fraisiers — humidité 1' AS label,
+                   'Canal C0 du CD74HC4067.' AS notes
+  UNION ALL SELECT 'soil-02', 'Fraisiers — humidité 2', 'Canal C1 du CD74HC4067.'
+  UNION ALL SELECT 'soil-03', 'Fraisiers — humidité 3', 'Canal C2 du CD74HC4067.'
+) v
 WHERE n.uid = 'NODE-001'
   AND z.uid = 'FRAISIERS'
   AND NOT EXISTS (
     SELECT 1 FROM measurement_point mp
-    WHERE mp.node_id = n.id AND mp.channel = 'soil-01'
+    WHERE mp.node_id = n.id AND mp.channel = v.channel
       AND mp.valid_to IS NULL
   );
+
+-- Le NOT EXISTS ci-dessus protège l'identité de la ligne, mais empêche du même
+-- coup de corriger un libellé sans repartir d'une base neuve. Or `label` est un
+-- nom d'affichage : le changer ne réattribue rien, il renomme une colonne dans
+-- Grafana.
+--
+-- On le remet donc à jour à chaque passage. `zone_id` NON : déplacer une voie
+-- d'une zone à l'autre par un UPDATE réécrirait rétroactivement l'attribution
+-- de tout l'historique. Un changement de zone se fait en clôturant la ligne
+-- (`valid_to`) et en en ouvrant une nouvelle.
+UPDATE measurement_point mp
+  JOIN node n ON n.id = mp.node_id
+  JOIN (
+              SELECT 'soil-01' AS channel, 'Fraisiers — humidité 1' AS label,
+                     'Canal C0 du CD74HC4067.' AS notes
+    UNION ALL SELECT 'soil-02', 'Fraisiers — humidité 2', 'Canal C1 du CD74HC4067.'
+    UNION ALL SELECT 'soil-03', 'Fraisiers — humidité 3', 'Canal C2 du CD74HC4067.'
+  ) v ON v.channel = mp.channel
+SET mp.label = v.label,
+    mp.notes = v.notes
+WHERE n.uid = 'NODE-001'
+  AND mp.valid_to IS NULL;
