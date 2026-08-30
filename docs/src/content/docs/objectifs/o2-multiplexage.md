@@ -4,8 +4,8 @@ description: Franchir la limite des quatre entrées analogiques, sans confondre 
 sidebar:
   order: 2
   badge:
-    text: Prêt
-    variant: note
+    text: Tenu
+    variant: success
 ---
 
 **La question.** Est-ce qu'un nœud peut lire plus de quatre sondes sans les
@@ -30,9 +30,9 @@ O2 sert à franchir la limite de quatre, ce dont l'allée de 15 mètres aura
 besoin — pas le POC sur la table. Le retard de livraison a donc été un agacement
 et jamais un blocage : O4 a été tenu pendant ce temps, avec une sonde unique.
 
-Et l'ordre inversé rend O2 **vérifiable** : son critère de sortie exige des
-valeurs de référence prises sans multiplexeur, que O3 produira. Attendre le
-CD74HC4067 pour tout faire d'un coup aurait laissé O2 s'auto-attester.
+Et l'ordre inversé a rendu O2 **vérifiable** : sa validation exigeait des
+valeurs de référence prises sans multiplexeur. Attendre le CD74HC4067 pour tout
+faire d'un coup aurait laissé O2 s'auto-attester.
 :::
 
 ## Le montage
@@ -300,13 +300,103 @@ au moins reproductible.
 
 ## Questions ouvertes
 
-- Faut-il un délai après changement de canal, et de combien ?
-- Le mux décale-t-il les valeurs par rapport à une lecture directe ?
-- Peut-on couper l'alimentation des sondes via `Vext` (GPIO 36), ou faut-il un
-  transistor dédié ?
-- Le mux lui-même doit-il être alimenté en permanence, ou coupé entre deux
-  mesures ?
+- ✅ **Faut-il un délai après changement de canal ?** Non. Lire immédiatement
+  donne le même résultat qu'attendre 50 ms, sur 1484 points de contraste.
+- ✅ **Le mux décale-t-il les valeurs ?** De **0,5 à 1,7 point**, proportionnellement
+  au signal — moins que les sondes ne divergent entre elles.
+- ⬜ **Peut-on couper l'alimentation des sondes via `Vext` (GPIO 36), ou
+  faut-il un transistor dédié ?** Sans objet au POC : trois sondes tirent 15 mA,
+  bien sous les 40 mA d'un GPIO. La question redevient vive au-delà de sept
+  sondes, et relève de [O6](/objectifs/o6-autonomie/).
+- ⬜ **Le mux doit-il rester alimenté en permanence, ou être coupé entre deux
+  mesures ?** `EN` est câblé sur GPIO 5 précisément pour que
+  [O6](/objectifs/o6-autonomie/) puisse mesurer ce que coûte de le laisser en
+  service.
 
 ## Résultats
 
-*À remplir.*
+**Campagne du 30 août 2026**, trois sondes sur `C0`, `C1`, `C2`, plus la sonde
+du canal 0 doublée sur GPIO 2 pour la comparaison directe.
+
+### Le multiplexeur est transparent
+
+Même sonde, même terre, même instant, deux chemins :
+
+| Milieu | Lecture directe | À travers le mux | Écart moyen |
+|---|---:|---:|---:|
+| Air | ~2673 | ~2672 | **−1,7 pt** |
+| Eau | ~1191 | ~1190 | **−0,5 pt** |
+
+L'écart est **proportionnel au signal**, ce qu'on attend d'une résistance à
+l'état passant : 1,7 × (1191 / 2672) ≈ 0,8, du bon ordre. Le pire cas est donc
+en terre sèche, là où le signal est le plus fort — et il vaut 1,7 point.
+
+À comparer aux deux échelles déjà connues du projet : **7,8 points** de
+divergence entre les trois sondes ([O3](/objectifs/o3-calibration/#résultats)),
+et **37 points** de reproductibilité entre séances
+([O1](/objectifs/o1-une-sonde/#la-vraie-limite--la-reproductibilité-entre-séances)).
+Le multiplexeur décale vingt fois moins que le simple fait de revenir mesurer
+le lendemain. Il disparaît sous tout le reste.
+
+### Aucun délai, aucune diaphonie
+
+Sur 1484 points de contraste entre un canal dans l'eau et un canal à l'air :
+
+| Délai après changement de canal | Écart au canal bas | Écart au canal haut |
+|---:|---:|---:|
+| **0 ms** | −1,0 | 0,0 |
+| 10 ms | −1,0 | −0,1 |
+| 50 ms | −1,9 | −0,3 |
+
+Lire immédiatement après avoir basculé l'aiguillage donne le même résultat
+qu'attendre cinquante fois plus longtemps. **Aucune lecture ne porte la trace du
+canal précédent**, et la séquence de mesure reste donc la plus simple possible :
+sélectionner, lire.
+
+C'est le seul résultat des quatre qui n'était pas acquis d'avance — la diaphonie
+temporelle était le point de vigilance principal de l'objectif.
+
+### Les seize canaux sont adressables
+
+Trois sondes sur `C0`, `C1` et `C2` n'emploient que `S0` et `S1` : elles ne
+prouvent rien sur les deux autres fils d'adresse, et quatre entrées sont
+justement ce qu'on avait déjà sans multiplexeur. La promesse de l'objectif se
+joue donc entièrement sur `S2` et `S3`.
+
+Une sonde témoin déplacée de canal en canal, et retrouvée en face du bon :
+
+| Sonde branchée sur | Apparaît en | Lecture directe | Valide |
+|---|---|---:|---|
+| `C4` | **C4** — 1210,9 | 1210,5 | `S2` |
+| `C8` | **C8** — 1205,4 | 1202,0 | `S3` |
+
+Le canal 15, jamais câblé, est resté entre 132 et 171 pendant toute la campagne.
+C'est lui qui donne l'échelle de « rien », sans laquelle un canal muet à 80
+points passerait pour une terre très sèche.
+
+:::note[Le critère de sortie a été resserré, pas relâché]
+Il demandait des valeurs « identiques à celles relevées en direct pendant O3 ».
+Ce n'était pas atteignable : les relevés de O3 datent du 15 août, et la
+reproductibilité entre séances vaut 37 points quand le décalage cherché en vaut
+moins de 2. On aurait cherché un effet vingt fois plus petit que le bruit de la
+comparaison.
+
+La comparaison se fait donc **à l'instant**, la même sonde étant lue par les
+deux chemins simultanément. Tout ce qui varie d'une séance à l'autre disparaît
+de l'équation. C'est plus exigeant que ce que demandait le critère écrit.
+:::
+
+:::caution[Le croquis a produit deux faux résultats avant d'en produire un vrai]
+Il a annoncé « −2316,4 points » quand le module n'était pas en service, puis
+« −865,1 points » quand la sonde témoin avait été déplacée sur `C4`. Deux
+chiffres faux, présentés avec la mise en page d'une mesure.
+
+`10-mux` vérifie désormais, avant de conclure, que les canaux reçoivent quelque
+chose, que la sortie ne flotte pas, et que la sonde lue en direct est bien celle
+branchée sur `C0`. Un canal se reconnaît à sa **stabilité** et non à son
+niveau : une entrée en l'air se charge et peut passer n'importe quel seuil — le
+canal 0 vide a été lu à 734, 91, 139 puis 1394 dans une même exécution.
+
+C'est le genre de garde-fou qu'on n'écrit qu'après s'être fait avoir, et qui
+aurait fait gagner deux séances.
+:::
