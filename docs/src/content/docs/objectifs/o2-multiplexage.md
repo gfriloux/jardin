@@ -75,23 +75,17 @@ en face, à la même hauteur, sur la carte.** Aucun croisement.
 | `VCC` | **3V3** | alimentation |
 | `GND` | **GND** | masse |
 
-:::danger[`EN` ne va PAS sur 3V3, contrairement à `VCC`]
-C'est l'erreur qui a été commise au premier montage, et elle ne ressemble pas à
-une panne : le croquis rend des valeurs, elles sont simplement fausses.
+:::caution[`EN` est actif à l'état bas]
+L'aiguillage est **en service à 0 V**, et **inhibé à 3,3 V**. Mettre du courant
+sur cette broche l'éteint — la carte fait pareil avec `Vext`, qui allume l'écran
+en écrivant `LOW`.
 
-`EN` est **actif à l'état bas**. Le relier à 3V3 revient à lui dire
-« inhibe-toi » : tous les canaux restent ouverts, la sortie flotte, et les
-lectures deviennent des restes de charge qui dépendent de ce qui s'est passé
-avant.
+Donc `EN` sur **GPIO 5**, que le croquis met à `LOW`. Ni sur 3V3, ni sur GPIO 6
+qui alimente les sondes et passe à `HIGH` pendant la mesure.
 
-Mettre du courant sur une broche pour **éteindre** une fonction est une
-convention, pas du bon sens. La carte fait pareil avec `Vext`, qui alimente
-l'écran et s'allume en écrivant `LOW`.
-
-En cas de doute sur ce fil, le brancher sur **`GND`** : l'aiguillage est alors
-en service en permanence, et la question est écartée. GPIO 5 lui rend
-simplement la possibilité d'être coupé, ce que [O6](/objectifs/o6-autonomie/)
-voudra mesurer.
+En cas de doute sur ce fil, le brancher sur `GND` : l'aiguillage reste alors en
+service en permanence. GPIO 5 lui rend seulement la possibilité d'être coupé,
+ce que [O6](/objectifs/o6-autonomie/) voudra mesurer.
 :::
 
 <figure class="schema">

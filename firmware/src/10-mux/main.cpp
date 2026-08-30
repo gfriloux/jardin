@@ -126,8 +126,10 @@ static bool verifier_montage(const float *repos, float vide) {
     Serial.println("    2. GND du module  -> GND  (distincte de celle des sondes)");
     Serial.println("    3. EN du module   -> GPIO 5");
     Serial.println();
-    Serial.println("  EN est ACTIF A L'ETAT BAS : en l'air il est vu haut, donc");
-    Serial.println("  inhibe, et tous les canaux restent ouverts.");
+    Serial.printf("  EN est ACTIF A L'ETAT BAS : sur 3V3 ou en l'air, il inhibe.\n"
+                  "  Il va sur GPIO %d — ni sur 3V3, ni sur GPIO %d qui alimente\n"
+                  "  les sondes et passe a HIGH pendant la mesure.\n",
+                  PIN_MUX_EN, PIN_SOIL_PWR);
     Serial.println();
     Serial.println("  Sur breadboard, la rainure centrale coupe tout : un fil en");
     Serial.println("  10a et l'autre en 10f ne sont pas relies, et ca ne se voit pas.");
