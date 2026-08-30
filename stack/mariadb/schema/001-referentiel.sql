@@ -1,18 +1,23 @@
 -- =====================================================================
 --  Jardin — référentiel : ce qu'on déclare à la main
 --
---  Trois objets physiques distincts, et c'est la distinction la plus
---  importante du schéma :
+--  Deux objets déclarés, et c'est la distinction qui structure tout :
 --
---    node    une carte LoRa. Elle a un identifiant qu'elle émet.
---    sensor  une sonde. Un objet qu'on tient dans la main, qu'on
---            étiquette, qu'on peut débrancher et rebrancher ailleurs.
---    channel la voie sur laquelle une sonde est branchée sur un nœud.
---            'soil-01' n'est PAS une sonde : c'est une prise.
+--    node              une carte LoRa. Elle émet son propre identifiant.
+--    measurement_point une VOIE de mesure : « ce qui est branché sur
+--                      NODE-001/soil-01, comment ça s'appelle à l'écran,
+--                      et dans quelle zone ça se trouve ».
 --
---  NODE-001/soil-01 et NODE-002/soil-01 sont deux prises différentes,
---  et la même sonde peut passer de l'une à l'autre. D'où une table de
---  liaison datée plutôt qu'une clé étrangère directe.
+--  Ce qu'on ne déclare PAS : la sonde en tant qu'objet physique. Voir
+--  ADR-017. Les sondes capacitives sont interchangeables — O3 l'a mesuré
+--  — et les suivre individuellement demanderait de les étiqueter au
+--  marqueur pour une information que personne n'irait lire. On change un
+--  pneu sans le baptiser.
+--
+--  Ce qu'on garde en revanche : les DATES. Elles ne suivent pas du
+--  matériel, elles suivent le CÂBLAGE. Le jour où une voie change de
+--  zone, sans date la nouvelle déclaration réattribuerait tout
+--  l'historique passé à la nouvelle zone, silencieusement.
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -40,6 +45,43 @@ INSERT INTO measurement_type (code, default_unit, label) VALUES
   ('voltage',          'V',     'Tension');
 
 -- ---------------------------------------------------------------------
+-- Comment déduire le type d'une mesure à partir du nom de sa voie.
+--
+-- La trame ne transporte pas de type : le nœud émet `"soil-01": 1834`,
+-- sans dire ce que c'est. Trois façons de résoudre :
+--
+--   - passer par du matériel déclaré. Correct, mais alors rien ne rentre
+--     tant que la déclaration n'est pas faite, et on perdrait des mesures ;
+--   - coder la convention dans l'importeur. Il faudrait recompiler pour
+--     ajouter un type ;
+--   - cette table. Déclarative, visible, modifiable à chaud.
+--
+-- Le préfixe le plus long l'emporte, ce qui permet des exceptions.
+--
+-- C'est ici, et NULLE PART AILLEURS, qu'on dit quel type de mesure
+-- correspond à quelle voie. `measurement_point` ne le redit pas : deux
+-- sources de vérité finiraient par diverger sans que rien ne le signale.
+-- ---------------------------------------------------------------------
+CREATE TABLE channel_convention (
+  prefix           VARCHAR(32) NOT NULL PRIMARY KEY,
+  measurement_type VARCHAR(32) NOT NULL,
+  unit             VARCHAR(16) NOT NULL,
+  CONSTRAINT fk_convention_type
+    FOREIGN KEY (measurement_type) REFERENCES measurement_type (code)
+) ENGINE=InnoDB;
+
+INSERT INTO channel_convention (prefix, measurement_type, unit) VALUES
+  ('soil-',    'soil_moisture',    'raw'),
+  ('soiltemp-','soil_temperature', 'degC'),
+  ('battery',  'voltage',          'V'),
+  ('temp-',    'temperature',      'degC'),
+  ('hum-',     'humidity',         'pct'),
+  ('lux-',     'illuminance',      'lx'),
+  ('rain-',    'rainfall',         'mm'),
+  ('level-',   'water_level',      'cm'),
+  ('flow-',    'flow_rate',        'L/min');
+
+-- ---------------------------------------------------------------------
 -- Les cartes LoRa.
 -- `uid` est la chaîne que le nœud émet lui-même dans sa trame.
 -- ---------------------------------------------------------------------
@@ -52,24 +94,6 @@ CREATE TABLE node (
   decommissioned_on DATE NULL,
   notes             TEXT NULL,
   UNIQUE KEY uq_node_uid (uid)
-) ENGINE=InnoDB;
-
--- ---------------------------------------------------------------------
--- Les sondes, en tant qu'objets physiques.
--- `uid` est l'étiquette collée dessus. Sans étiquetage physique, les
--- mesures ne sont attribuables à rien le jour où deux sondes divergent.
--- ---------------------------------------------------------------------
-CREATE TABLE sensor (
-  id               INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  uid              VARCHAR(32)  NOT NULL,
-  measurement_type VARCHAR(32)  NOT NULL,
-  model            VARCHAR(128) NULL,
-  acquired_on      DATE NULL,
-  retired_on       DATE NULL,
-  notes            TEXT NULL,
-  UNIQUE KEY uq_sensor_uid (uid),
-  CONSTRAINT fk_sensor_type
-    FOREIGN KEY (measurement_type) REFERENCES measurement_type (code)
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
@@ -94,58 +118,47 @@ CREATE TABLE zone (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
--- LIAISON sonde <-> nœud, datée.
+-- LE POINT DE MESURE — une voie d'un nœud, datée.
 --
--- C'est la table qui répond à « déclarer les sondes, les cartes, et les
--- liaisons entre ». Elle est datée parce que ces liaisons bougent :
--- on déplace une sonde, on remplace un nœud grillé, on réaffecte une
--- voie de multiplexeur. Sans date, tout l'historique serait réattribué
--- rétroactivement au dernier branchement — silencieusement.
+-- C'est la seule table de câblage, et elle répond à trois questions à la
+-- fois : qu'est-ce qui est branché sur cette voie, comment ça s'appelle
+-- à l'écran, et où ça se trouve.
 --
--- valid_to NULL = branchement courant.
--- ---------------------------------------------------------------------
-CREATE TABLE sensor_attachment (
-  id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  sensor_id  INT UNSIGNED NOT NULL,
-  node_id    INT UNSIGNED NOT NULL,
-  channel    VARCHAR(32)  NOT NULL,
-  valid_from DATETIME(3)  NOT NULL,
-  valid_to   DATETIME(3)  NULL,
-  notes      TEXT NULL,
-  KEY idx_attachment_lookup (node_id, channel, valid_from),
-  KEY idx_attachment_sensor (sensor_id, valid_from),
-  CONSTRAINT fk_attachment_sensor
-    FOREIGN KEY (sensor_id) REFERENCES sensor (id),
-  CONSTRAINT fk_attachment_node
-    FOREIGN KEY (node_id) REFERENCES node (id),
-  CONSTRAINT ck_attachment_period
-    CHECK (valid_to IS NULL OR valid_to > valid_from)
-) ENGINE=InnoDB;
-
--- ---------------------------------------------------------------------
--- IMPLANTATION d'une sonde, datée elle aussi.
+-- Ce qu'elle ne dit PAS : quel exemplaire de sonde y est branché. Si une
+-- sonde meurt, on la remplace et rien ne change ici — c'est la même voie
+-- qui mesure la même chose au même endroit. Voir ADR-017.
 --
--- Séparée de la liaison : une sonde peut être déplacée dans le jardin
--- sans changer de nœud, et inversement.
+-- Le TYPE de mesure n'y figure pas non plus : il se déduit du nom de la
+-- voie via `channel_convention`, plus haut dans ce fichier, où `soil-`
+-- donne `soil_moisture`. Le redéclarer ici créerait deux sources de
+-- vérité capables de diverger sans que rien ne le signale.
+--
+-- `label` est le nom lu dans Grafana. C'est le seul endroit où l'on
+-- nomme quelque chose, et ce nom décrit un emplacement, pas un objet.
 --
 -- `zone_id` est obligatoire, `position` non : l'appartenance à une zone
 -- est la décision qui compte, la position exacte ne sert qu'à la carte.
+--
+-- valid_to NULL = câblage courant.
 -- ---------------------------------------------------------------------
-CREATE TABLE sensor_placement (
+CREATE TABLE measurement_point (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  sensor_id  INT UNSIGNED NOT NULL,
+  node_id    INT UNSIGNED NOT NULL,
+  channel    VARCHAR(32)  NOT NULL,
+  label      VARCHAR(128) NOT NULL,
   zone_id    INT UNSIGNED NOT NULL,
-  position   POINT NULL,
+  position   POINT        NULL,
   depth_cm   SMALLINT UNSIGNED NULL,
-  valid_from DATETIME(3) NOT NULL,
-  valid_to   DATETIME(3) NULL,
+  valid_from DATETIME(3)  NOT NULL,
+  valid_to   DATETIME(3)  NULL,
   notes      TEXT NULL,
-  KEY idx_placement_sensor (sensor_id, valid_from),
-  CONSTRAINT fk_placement_sensor
-    FOREIGN KEY (sensor_id) REFERENCES sensor (id),
-  CONSTRAINT fk_placement_zone
+  KEY idx_point_lookup (node_id, channel, valid_from),
+  KEY idx_point_zone (zone_id),
+  CONSTRAINT fk_point_node
+    FOREIGN KEY (node_id) REFERENCES node (id),
+  CONSTRAINT fk_point_zone
     FOREIGN KEY (zone_id) REFERENCES zone (id),
-  CONSTRAINT ck_placement_period
+  CONSTRAINT ck_point_period
     CHECK (valid_to IS NULL OR valid_to > valid_from)
 ) ENGINE=InnoDB;
 
@@ -153,18 +166,24 @@ CREATE TABLE sensor_placement (
 -- Calibration, datée. Jamais appliquée aux données stockées : elle est
 -- calculée à la lecture, pour rester rejouable sur tout l'historique.
 -- Voir ADR-002.
+--
+-- Elle porte sur le POINT et non sur la sonde : depuis l'ADR-015 on ne
+-- calibre plus finement un système qui prend une décision binaire, et
+-- depuis l'ADR-017 la sonde n'est plus un objet suivi. Ce qui se calibre
+-- est donc « cette voie, à cet endroit », ce qui inclut le sol autant
+-- que l'électronique — et c'est bien ce qu'on veut.
 -- ---------------------------------------------------------------------
 CREATE TABLE calibration (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  sensor_id  INT UNSIGNED NOT NULL,
+  point_id   INT UNSIGNED NOT NULL,
   method     VARCHAR(32)  NOT NULL,
   params     JSON         NOT NULL,
   valid_from DATETIME(3)  NOT NULL,
   valid_to   DATETIME(3)  NULL,
   notes      TEXT NULL,
-  KEY idx_calibration_sensor (sensor_id, valid_from),
-  CONSTRAINT fk_calibration_sensor
-    FOREIGN KEY (sensor_id) REFERENCES sensor (id),
+  KEY idx_calibration_point (point_id, valid_from),
+  CONSTRAINT fk_calibration_point
+    FOREIGN KEY (point_id) REFERENCES measurement_point (id),
   CONSTRAINT ck_calibration_period
     CHECK (valid_to IS NULL OR valid_to > valid_from)
 ) ENGINE=InnoDB;

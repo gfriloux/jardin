@@ -20,35 +20,8 @@ CREATE TABLE import_state (
                             ON UPDATE CURRENT_TIMESTAMP(3)
 ) ENGINE=InnoDB;
 
--- ---------------------------------------------------------------------
--- Comment déduire le type d'une mesure à partir du nom de sa voie.
---
--- La trame ne transporte pas de type : le nœud émet `"soil-01": 1834`, sans
--- dire ce que c'est. Trois façons de résoudre :
---
---   - passer par la sonde déclarée. Correct, mais alors rien ne rentre tant
---     que le matériel n'est pas déclaré, et on perdrait des mesures ;
---   - coder la convention dans l'importeur. Il faudrait recompiler pour
---     ajouter un type ;
---   - cette table. Déclarative, visible, modifiable à chaud.
---
--- Le préfixe le plus long l'emporte, ce qui permet des exceptions.
--- ---------------------------------------------------------------------
-CREATE TABLE channel_convention (
-  prefix           VARCHAR(32) NOT NULL PRIMARY KEY,
-  measurement_type VARCHAR(32) NOT NULL,
-  unit             VARCHAR(16) NOT NULL,
-  CONSTRAINT fk_convention_type
-    FOREIGN KEY (measurement_type) REFERENCES measurement_type (code)
-) ENGINE=InnoDB;
-
-INSERT INTO channel_convention (prefix, measurement_type, unit) VALUES
-  ('soil-',    'soil_moisture',    'raw'),
-  ('soiltemp-','soil_temperature', 'degC'),
-  ('battery',  'voltage',          'V'),
-  ('temp-',    'temperature',      'degC'),
-  ('hum-',     'humidity',         'pct'),
-  ('lux-',     'illuminance',      'lx'),
-  ('rain-',    'rainfall',         'mm'),
-  ('level-',   'water_level',      'cm'),
-  ('flow-',    'flow_rate',        'L/min');
+-- `channel_convention`, qui dit comment déduire le type d'une mesure du
+-- nom de sa voie, vivait ici. Elle est passée dans 001-referentiel.sql :
+-- c'est une table de référence, elle pointe `measurement_type` qui s'y
+-- trouve déjà, et les vues de 004 en ont besoin — or elles sont créées
+-- avant ce fichier.

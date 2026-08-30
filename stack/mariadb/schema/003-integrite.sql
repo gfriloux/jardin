@@ -8,13 +8,17 @@
 --
 --  D'où ces contrôles. Ils protègent contre la saisie manuelle, qui est
 --  exactement le mode d'alimentation de ces tables.
+--
+--  Depuis l'ADR-017 il n'y a plus qu'une règle à tenir, là où il en
+--  fallait deux : une voie ne peut pas être déclarée deux fois sur la
+--  même période. L'autre — « la même sonde branchée à deux endroits en
+--  même temps » — a disparu avec l'objet qu'elle protégeait.
 -- =====================================================================
 
 DELIMITER $$
 
-CREATE PROCEDURE assert_attachment_free(
+CREATE PROCEDURE assert_point_free(
   IN p_id      INT UNSIGNED,
-  IN p_sensor  INT UNSIGNED,
   IN p_node    INT UNSIGNED,
   IN p_channel VARCHAR(32),
   IN p_from    DATETIME(3),
@@ -22,73 +26,29 @@ CREATE PROCEDURE assert_attachment_free(
 BEGIN
   DECLARE v_count INT;
 
-  -- Deux sondes sur la même voie du même nœud, en même temps.
+  -- Deux déclarations pour la même voie du même nœud, en même temps.
   SELECT COUNT(*) INTO v_count
-    FROM sensor_attachment a
-   WHERE a.node_id = p_node
-     AND a.channel = p_channel
-     AND (p_id IS NULL OR a.id <> p_id)
-     AND a.valid_from < COALESCE(p_to, '9999-12-31 00:00:00')
-     AND COALESCE(a.valid_to, '9999-12-31 00:00:00') > p_from;
+    FROM measurement_point mp
+   WHERE mp.node_id = p_node
+     AND mp.channel = p_channel
+     AND (p_id IS NULL OR mp.id <> p_id)
+     AND mp.valid_from < COALESCE(p_to, '9999-12-31 00:00:00')
+     AND COALESCE(mp.valid_to, '9999-12-31 00:00:00') > p_from;
 
   IF v_count > 0 THEN
     SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-      'Chevauchement : cette voie est deja occupee sur cette periode';
-  END IF;
-
-  -- La même sonde branchée à deux endroits en même temps.
-  SELECT COUNT(*) INTO v_count
-    FROM sensor_attachment a
-   WHERE a.sensor_id = p_sensor
-     AND (p_id IS NULL OR a.id <> p_id)
-     AND a.valid_from < COALESCE(p_to, '9999-12-31 00:00:00')
-     AND COALESCE(a.valid_to, '9999-12-31 00:00:00') > p_from;
-
-  IF v_count > 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-      'Chevauchement : cette sonde est deja branchee ailleurs sur cette periode';
+      'Chevauchement : cette voie est deja declaree sur cette periode';
   END IF;
 END$$
 
-CREATE PROCEDURE assert_placement_free(
-  IN p_id     INT UNSIGNED,
-  IN p_sensor INT UNSIGNED,
-  IN p_from   DATETIME(3),
-  IN p_to     DATETIME(3))
-BEGIN
-  DECLARE v_count INT;
-
-  SELECT COUNT(*) INTO v_count
-    FROM sensor_placement p
-   WHERE p.sensor_id = p_sensor
-     AND (p_id IS NULL OR p.id <> p_id)
-     AND p.valid_from < COALESCE(p_to, '9999-12-31 00:00:00')
-     AND COALESCE(p.valid_to, '9999-12-31 00:00:00') > p_from;
-
-  IF v_count > 0 THEN
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT =
-      'Chevauchement : cette sonde a deja une implantation sur cette periode';
-  END IF;
-END$$
-
-CREATE TRIGGER trg_attachment_bi BEFORE INSERT ON sensor_attachment
+CREATE TRIGGER trg_point_bi BEFORE INSERT ON measurement_point
 FOR EACH ROW
-  CALL assert_attachment_free(NULL, NEW.sensor_id, NEW.node_id,
-                              NEW.channel, NEW.valid_from, NEW.valid_to)$$
+  CALL assert_point_free(NULL, NEW.node_id, NEW.channel,
+                         NEW.valid_from, NEW.valid_to)$$
 
-CREATE TRIGGER trg_attachment_bu BEFORE UPDATE ON sensor_attachment
+CREATE TRIGGER trg_point_bu BEFORE UPDATE ON measurement_point
 FOR EACH ROW
-  CALL assert_attachment_free(NEW.id, NEW.sensor_id, NEW.node_id,
-                              NEW.channel, NEW.valid_from, NEW.valid_to)$$
-
-CREATE TRIGGER trg_placement_bi BEFORE INSERT ON sensor_placement
-FOR EACH ROW
-  CALL assert_placement_free(NULL, NEW.sensor_id,
-                             NEW.valid_from, NEW.valid_to)$$
-
-CREATE TRIGGER trg_placement_bu BEFORE UPDATE ON sensor_placement
-FOR EACH ROW
-  CALL assert_placement_free(NEW.id, NEW.sensor_id,
-                             NEW.valid_from, NEW.valid_to)$$
+  CALL assert_point_free(NEW.id, NEW.node_id, NEW.channel,
+                         NEW.valid_from, NEW.valid_to)$$
 
 DELIMITER ;

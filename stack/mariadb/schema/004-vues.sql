@@ -3,10 +3,10 @@
 --
 --  Toute l'intelligence du schéma est ici : les tables de faits ne
 --  connaissent que des voies, ce sont les vues qui rattachent chaque
---  mesure à la sonde, l'implantation et la zone qui étaient en vigueur
---  AU MOMENT de la mesure.
+--  mesure au point, à la zone et au nom qui étaient en vigueur AU MOMENT
+--  de la mesure.
 --
---  Conséquence : déplacer une sonde n'altère pas une seule ligne
+--  Conséquence : recâbler une voie n'altère pas une seule ligne
 --  d'historique, et l'historique reste correctement attribué.
 -- =====================================================================
 
@@ -14,17 +14,22 @@ SET NAMES utf8mb4;
 
 -- ---------------------------------------------------------------------
 -- La vue de base. C'est elle qu'on interroge, jamais `measurement`.
+--
+-- La jointure est en LEFT : une mesure arrivée sur une voie non encore
+-- déclarée reste visible, simplement sans nom ni zone. Perdre une mesure
+-- parce qu'une déclaration manque serait le mauvais arbitrage — c'est le
+-- même choix que fait l'importeur avec les nœuds inconnus.
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_measurement AS
 SELECT
   f.received_at,
   n.uid              AS node_uid,
   m.channel,
-  s.id               AS sensor_id,
-  s.uid              AS sensor_uid,
+  mp.id              AS point_id,
+  mp.label           AS point_label,
   z.uid              AS zone_uid,
   z.label            AS zone_label,
-  p.depth_cm,
+  mp.depth_cm,
   m.measurement_type,
   m.value,
   m.unit,
@@ -34,17 +39,12 @@ SELECT
 FROM measurement m
 JOIN frame f ON f.id = m.frame_id
 JOIN node  n ON n.id = f.node_id
-LEFT JOIN sensor_attachment a
-       ON a.node_id = f.node_id
-      AND a.channel = m.channel
-      AND f.received_at >= a.valid_from
-      AND (a.valid_to IS NULL OR f.received_at < a.valid_to)
-LEFT JOIN sensor s ON s.id = a.sensor_id
-LEFT JOIN sensor_placement p
-       ON p.sensor_id = s.id
-      AND f.received_at >= p.valid_from
-      AND (p.valid_to IS NULL OR f.received_at < p.valid_to)
-LEFT JOIN zone z ON z.id = p.zone_id;
+LEFT JOIN measurement_point mp
+       ON mp.node_id = f.node_id
+      AND mp.channel = m.channel
+      AND f.received_at >= mp.valid_from
+      AND (mp.valid_to IS NULL OR f.received_at < mp.valid_to)
+LEFT JOIN zone z ON z.id = mp.zone_id;
 
 -- ---------------------------------------------------------------------
 -- L'humidité du sol, avec sa valeur calibrée calculée à la volée.
@@ -61,7 +61,7 @@ SELECT
   vm.received_at,
   vm.node_uid,
   vm.channel,
-  vm.sensor_uid,
+  vm.point_label,
   vm.zone_uid,
   vm.zone_label,
   vm.depth_cm,
@@ -79,34 +79,39 @@ SELECT
   vm.snr_db
 FROM v_measurement vm
 LEFT JOIN calibration c
-       ON c.sensor_id = vm.sensor_id
+       ON c.point_id = vm.point_id
       AND vm.received_at >= c.valid_from
       AND (c.valid_to IS NULL OR vm.received_at < c.valid_to)
 WHERE vm.measurement_type = 'soil_moisture';
 
 -- ---------------------------------------------------------------------
--- Le câblage courant : quelle sonde est branchée où, en ce moment.
+-- Le câblage courant : ce qui est branché où, en ce moment.
 -- C'est la vue à consulter avant d'aller débrancher quoi que ce soit.
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_current_wiring AS
 SELECT
-  n.uid       AS node_uid,
-  a.channel,
-  s.uid       AS sensor_uid,
-  s.model,
-  z.uid       AS zone_uid,
-  p.depth_cm,
-  ST_X(p.position) AS pos_x_m,
-  ST_Y(p.position) AS pos_y_m,
-  a.valid_from AS attached_since
-FROM sensor_attachment a
-JOIN node   n ON n.id = a.node_id
-JOIN sensor s ON s.id = a.sensor_id
-LEFT JOIN sensor_placement p
-       ON p.sensor_id = s.id AND p.valid_to IS NULL
-LEFT JOIN zone z ON z.id = p.zone_id
-WHERE a.valid_to IS NULL
-ORDER BY n.uid, a.channel;
+  n.uid        AS node_uid,
+  mp.channel,
+  mp.label     AS point_label,
+  cc.measurement_type,
+  z.uid        AS zone_uid,
+  mp.depth_cm,
+  ST_X(mp.position) AS pos_x_m,
+  ST_Y(mp.position) AS pos_y_m,
+  mp.valid_from AS declared_since
+FROM measurement_point mp
+JOIN node n ON n.id = mp.node_id
+JOIN zone z ON z.id = mp.zone_id
+-- Le type vient de la convention de nommage des voies, pas d'une
+-- déclaration : le préfixe le plus long l'emporte.
+LEFT JOIN channel_convention cc
+       ON mp.channel LIKE CONCAT(cc.prefix, '%')
+      AND CHAR_LENGTH(cc.prefix) = (
+            SELECT MAX(CHAR_LENGTH(c2.prefix))
+              FROM channel_convention c2
+             WHERE mp.channel LIKE CONCAT(c2.prefix, '%'))
+WHERE mp.valid_to IS NULL
+ORDER BY n.uid, mp.channel;
 
 -- ---------------------------------------------------------------------
 -- Contrôle de cohérence géométrique.
@@ -117,14 +122,16 @@ ORDER BY n.uid, a.channel;
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE VIEW v_placement_anomalies AS
 SELECT
-  s.uid AS sensor_uid,
-  z.uid AS zone_uid,
-  ST_X(p.position) AS pos_x_m,
-  ST_Y(p.position) AS pos_y_m,
+  n.uid  AS node_uid,
+  mp.channel,
+  mp.label AS point_label,
+  z.uid  AS zone_uid,
+  ST_X(mp.position) AS pos_x_m,
+  ST_Y(mp.position) AS pos_y_m,
   'position hors de la zone declaree' AS anomalie
-FROM sensor_placement p
-JOIN sensor s ON s.id = p.sensor_id
-JOIN zone   z ON z.id = p.zone_id
-WHERE p.position IS NOT NULL
-  AND p.valid_to IS NULL
-  AND NOT ST_Contains(z.boundary, p.position);
+FROM measurement_point mp
+JOIN node n ON n.id = mp.node_id
+JOIN zone z ON z.id = mp.zone_id
+WHERE mp.position IS NOT NULL
+  AND mp.valid_to IS NULL
+  AND NOT ST_Contains(z.boundary, mp.position);

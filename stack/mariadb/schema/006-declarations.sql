@@ -2,11 +2,11 @@
 --  Jardin — les déclarations du terrain
 --
 --  Ce fichier est la SEULE source des objets déclarés à la main : les
---  cartes, les sondes, les zones, et les liaisons datées entre elles.
---  Tout le reste de la base se reconstruit depuis l'archive NDJSON par
---  simple réimport ; ce qu'on déclare, lui, n'existe nulle part ailleurs.
+--  cartes, les zones, et les points de mesure. Tout le reste de la base
+--  se reconstruit depuis l'archive NDJSON par simple réimport ; ce qu'on
+--  déclare, lui, n'existe nulle part ailleurs.
 --
---  Le mettre ici, dans docker-entrypoint-initdb.d, garantit qu'une base
+--  Le mettre dans docker-entrypoint-initdb.d garantit qu'une base
 --  recréée de zéro repart avec le même référentiel. Sans ça, `just
 --  db-reset` effacerait des déclarations qu'aucune archive ne pourrait
 --  rejouer — et les mesures redeviendraient non attribuables, alors même
@@ -14,7 +14,6 @@
 --
 --  Tout y est IDEMPOTENT : le fichier s'applique aussi bien à une base
 --  neuve qu'à une base déjà peuplée, et se rejoue sans effet de bord.
---  C'est ce qui permet de l'appliquer à chaud après l'avoir modifié.
 -- =====================================================================
 
 SET NAMES utf8mb4;
@@ -40,32 +39,6 @@ ON DUPLICATE KEY UPDATE
   notes           = VALUES(notes);
 
 -- ---------------------------------------------------------------------
--- Les sondes, en tant qu'objets physiques.
---
--- `uid` est l'étiquette écrite au marqueur indélébile SUR la sonde. Ce
--- n'est pas une convention de nommage interne : c'est ce qu'on lit en la
--- sortant de terre. Les trois du lot A sont interchangeables — O3 a
--- mesuré 7,8 points de divergence maximale, soit moins que le bruit de
--- la procédure qui les distinguerait — mais elles restent trois objets
--- distincts, qu'on peut déplacer indépendamment.
---
--- Seule SOIL-A1 est déclarée pour l'instant : c'est la seule branchée.
--- Les deux autres viendront avec O2, quand le multiplexeur les mettra
--- en service.
--- ---------------------------------------------------------------------
-INSERT INTO sensor (uid, measurement_type, model, acquired_on, notes) VALUES
-  ('SOIL-A1',
-   'soil_moisture',
-   'DollaTek — sonde capacitive, résistante à la corrosion',
-   '2026-08-15',
-   'Lot A, trois sondes achetées ensemble. Capacitive et non résistive.')
-ON DUPLICATE KEY UPDATE
-  measurement_type = VALUES(measurement_type),
-  model            = VALUES(model),
-  acquired_on      = VALUES(acquired_on),
-  notes            = VALUES(notes);
-
--- ---------------------------------------------------------------------
 -- Les zones.
 --
 -- Une zone est une décision du jardinier, pas un calcul : c'est ce qu'on
@@ -88,46 +61,33 @@ ON DUPLICATE KEY UPDATE
   notes    = VALUES(notes);
 
 -- ---------------------------------------------------------------------
--- LIAISON sonde <-> voie du nœud.
+-- Les points de mesure : ce qui est branché où, et comment ça s'appelle.
+--
+-- On ne déclare pas quel exemplaire de sonde y est branché — voir
+-- ADR-017. Le jour où celle-ci meurt, on en met une neuve et RIEN ne
+-- change ici : c'est la même voie, au même endroit, qui mesure la même
+-- chose. Aucune ligne de SQL à écrire pour un remplacement.
 --
 -- `valid_from` doit précéder la première mesure à rattacher, sinon la
 -- vue laisse la mesure orpheline sans rien signaler : v_measurement
 -- joint sur `received_at >= valid_from`. La première trame archivée date
 -- du 30 août 2026 à 11:29 UTC, d'où minuit ce jour-là.
 --
--- Ces tables n'ont pas de clé unique — les liaisons se répètent
--- légitimement dans le temps, c'est tout leur intérêt. L'idempotence
--- passe donc par un NOT EXISTS sur le branchement courant.
+-- La table n'a pas de clé unique — une voie se redéclare légitimement
+-- dans le temps, c'est tout l'intérêt des dates. L'idempotence passe
+-- donc par un NOT EXISTS sur la déclaration courante.
+--
+-- `depth_cm` reste NULL tant que rien n'est enterré : la campagne de
+-- portée a promené la sonde à la main. Ce sera le sujet de O7.
 -- ---------------------------------------------------------------------
-INSERT INTO sensor_attachment (sensor_id, node_id, channel, valid_from, notes)
-SELECT s.id, n.id, 'soil-01', '2026-08-30 00:00:00',
+INSERT INTO measurement_point (node_id, channel, label, zone_id, valid_from, notes)
+SELECT n.id, 'soil-01', 'Fraisiers — humidité', z.id, '2026-08-30 00:00:00',
        'Branchement direct sur GPIO 7, sans multiplexeur — montage de O1.'
-FROM sensor s, node n
-WHERE s.uid = 'SOIL-A1'
-  AND n.uid = 'NODE-001'
-  AND NOT EXISTS (
-    SELECT 1 FROM sensor_attachment a
-    WHERE a.sensor_id = s.id AND a.node_id = n.id
-      AND a.channel = 'soil-01' AND a.valid_to IS NULL
-  );
-
--- ---------------------------------------------------------------------
--- IMPLANTATION de la sonde dans le terrain.
---
--- Séparée de la liaison, parce qu'une sonde se déplace dans le jardin
--- sans changer de nœud, et change de nœud sans se déplacer.
---
--- `depth_cm` est laissée NULL tant que la sonde n'est pas réellement en
--- terre : la campagne de portée l'a promenée à la main. Ce sera le sujet
--- de O7.
--- ---------------------------------------------------------------------
-INSERT INTO sensor_placement (sensor_id, zone_id, valid_from, notes)
-SELECT s.id, z.id, '2026-08-30 00:00:00',
-       'Implantation déclarative : la sonde n''est pas encore enterrée.'
-FROM sensor s, zone z
-WHERE s.uid = 'SOIL-A1'
+FROM node n, zone z
+WHERE n.uid = 'NODE-001'
   AND z.uid = 'FRAISIERS'
   AND NOT EXISTS (
-    SELECT 1 FROM sensor_placement p
-    WHERE p.sensor_id = s.id AND p.valid_to IS NULL
+    SELECT 1 FROM measurement_point mp
+    WHERE mp.node_id = n.id AND mp.channel = 'soil-01'
+      AND mp.valid_to IS NULL
   );
