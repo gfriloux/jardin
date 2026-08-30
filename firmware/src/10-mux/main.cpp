@@ -73,6 +73,41 @@ static void alimenter_sondes(bool actif) {
   if (actif) delay(STABILISATION_MS);
 }
 
+// --- Balayage des seize canaux --------------------------------------------
+//
+// Les canaux 0, 1 et 2 n'emploient que S0 et S1 : trois sondes ne prouvent donc
+// RIEN sur les deux autres fils d'adresse. Or il faut S2 pour atteindre le
+// canal 4 et S3 pour le canal 8, et c'est là toute la raison d'être de O2 —
+// franchir la limite de quatre entrées, qui est précisément ce que S0 et S1
+// seuls permettent.
+//
+// Lire le canal 15 ne suffit pas à les valider : si S2 et S3 restaient bas,
+// `1111` sélectionnerait `0011`, soit le canal 3, non câblé lui aussi, qui rend
+// la même valeur de fond. Les deux cas sont indiscernables.
+//
+// D'où ce balayage : on déplace UNE sonde de canal en canal et on regarde
+// laquelle des seize lignes réagit. Si la sonde branchée sur C4 apparaît bien
+// en face du canal 4, S2 commute. Idem pour C8 et S3.
+static void balayer_tous_les_canaux(float vide) {
+  Serial.println();
+  Serial.println("--- Balayage des 16 canaux ---");
+  Serial.println("Une sonde branchee sur un canal doit apparaitre EN FACE de");
+  Serial.println("ce canal. La deplacer sur C4 valide S2, sur C8 valide S3.");
+  Serial.println();
+
+  for (int c = 0; c < 16; c++) {
+    float v = lire_canal_repose(c);
+    bool actif = fabsf(v - vide) > 50.0f;
+    Serial.printf("  C%-2d %8.1f %s", c, v, actif ? "<-- sonde" : "");
+    // Rappel de ce qu'il faut pour atteindre ce canal, pour que la lecture
+    // du tableau dise directement quel fil d'adresse est en cause.
+    if (c == 4) Serial.print("   (exige S2)");
+    if (c == 8) Serial.print("   (exige S3)");
+    if (c == 12) Serial.print("   (exige S2 et S3)");
+    Serial.println();
+  }
+}
+
 // --- Vérification du montage, avant toute mesure ---------------------------
 //
 // Ce croquis a d'abord été écrit sans ce contrôle, et il a annoncé « écart
@@ -292,6 +327,8 @@ void setup() {
     return;  // on ne mesure pas un montage muet
   }
   Serial.println("  OK — les canaux recoivent, la sortie ne flotte pas.");
+
+  balayer_tous_les_canaux(vide);
 
   question_decalage();
   question_diaphonie(repos);
