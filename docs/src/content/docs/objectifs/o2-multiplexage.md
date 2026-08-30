@@ -71,9 +71,28 @@ en face, à la même hauteur, sur la carte.** Aucun croisement.
 | `S1` | **GPIO 48** | adresse, bit 2 |
 | `S2` | **GPIO 19** | adresse, bit 4 |
 | `S3` | **GPIO 20** | adresse, bit 8 |
-| `EN` (ou `E`) | **GPIO 5** | actif à l'état **bas** : `LOW` = aiguillage en service |
+| `EN` (ou `E`) | **GPIO 5** | actif à l'état **bas** — voir l'avertissement ci-dessous |
 | `VCC` | **3V3** | alimentation |
 | `GND` | **GND** | masse |
+
+:::danger[`EN` ne va PAS sur 3V3, contrairement à `VCC`]
+C'est l'erreur qui a été commise au premier montage, et elle ne ressemble pas à
+une panne : le croquis rend des valeurs, elles sont simplement fausses.
+
+`EN` est **actif à l'état bas**. Le relier à 3V3 revient à lui dire
+« inhibe-toi » : tous les canaux restent ouverts, la sortie flotte, et les
+lectures deviennent des restes de charge qui dépendent de ce qui s'est passé
+avant.
+
+Mettre du courant sur une broche pour **éteindre** une fonction est une
+convention, pas du bon sens. La carte fait pareil avec `Vext`, qui alimente
+l'écran et s'allume en écrivant `LOW`.
+
+En cas de doute sur ce fil, le brancher sur **`GND`** : l'aiguillage est alors
+en service en permanence, et la question est écartée. GPIO 5 lui rend
+simplement la possibilité d'être coupé, ce que [O6](/objectifs/o6-autonomie/)
+voudra mesurer.
+:::
 
 <figure class="schema">
 <svg viewBox="0 0 640 350" role="img" aria-labelledby="cablage-o2-bus-titre">
@@ -147,8 +166,14 @@ sur GND. Seules les sorties `AOUT` se séparent.
 | Sonde 1 `AOUT` | entrée **`C0`** du module — **et aussi GPIO 2**, voir ci-dessous |
 | Sonde 2 `AOUT` | entrée **`C1`** du module |
 | Sonde 3 `AOUT` | entrée **`C2`** du module |
-| Les trois `VCC` | **GPIO 6**, tous sur le même nœud de breadboard |
+| Les trois `VCC` | **GPIO 6**, tous sur le même nœud de breadboard — **pas 3V3** |
 | Les trois `GND` | **GND**, tous sur le même nœud |
+
+Les sondes s'alimentent depuis **GPIO 6**, jamais depuis 3V3. Sur 3V3 elles
+fonctionneraient — mais elles resteraient allumées en permanence, alors que
+tout l'intérêt de GPIO 6 est de ne les alimenter que pendant la mesure. C'est
+ce que [O1](/objectifs/o1-une-sonde/#étape-8--nalimenter-la-sonde-que-pendant-la-mesure)
+a mis en place, et ce dont [O6](/objectifs/o6-autonomie/) dépendra.
 
 <figure class="schema">
 <svg viewBox="0 0 640 330" role="img" aria-labelledby="cablage-o2-sondes-titre">
