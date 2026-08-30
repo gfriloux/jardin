@@ -77,7 +77,7 @@ Trois choses à lire dans ce graphe :
 |---|---|---|---|
 | [O0](/objectifs/o0-socle/) | Socle projet | Où vit le code, comment on le construit, où on documente ? | ✅ tenu |
 | [O1](/objectifs/o1-une-sonde/) | Une sonde, une valeur | Est-ce qu'une sonde donne une valeur stable et plausible ? | ✅ tenu |
-| [O2](/objectifs/o2-multiplexage/) | Passer à N sondes | Est-ce qu'un nœud peut lire plus de quatre sondes sans se mélanger ? | ⏸ multiplexeur non livré |
+| [O2](/objectifs/o2-multiplexage/) | Passer à N sondes | Est-ce qu'un nœud peut lire plus de quatre sondes sans se mélanger ? | 🔜 prêt — multiplexeur livré |
 | [O3](/objectifs/o3-calibration/) | Calibration | Que vaut réellement un nombre d'ADC ? | ✅ tenu |
 | [O4](/objectifs/o4-lien-radio/) | Le lien radio | Est-ce que LoRa porte depuis le fond du jardin ? | ✅ tenu |
 | [O5](/objectifs/o5-chaine-de-donnees/) | La chaîne de données | Est-ce que l'architecture de données est agréable à exploiter ? | 🔜 prêt |
@@ -92,8 +92,8 @@ Les objectifs O1 à O5 existent pour répondre à quatre questions, et à rien
 d'autre :
 
 1. ✅ Est-ce que les sondes donnent des mesures suffisamment **stables** ?
-2. ⏸ Est-ce qu'un nœud peut lire **plusieurs sondes** ? — en attente du
-   multiplexeur
+2. 🔜 Est-ce qu'un nœud peut lire **plusieurs sondes** ? — le multiplexeur est
+   arrivé, plus rien ne bloque
 3. ✅ Est-ce que **LoRa porte** correctement depuis le jardin ? — oui, et de
    très loin : 0 % de perte à 15 m, 60 dB de marge
    ([résultats](/objectifs/o4-lien-radio/#résultats))
