@@ -93,7 +93,7 @@ services:
         condition: service_healthy
     environment:
       JARDIN_DATA_DIR: /data
-      JARDIN_DB_URL: mysql://jardin:${MARIADB_PASSWORD:?}@mariadb:3306/jardin
+      JARDIN_DB_URL: mysql://jardin:${MARIADB_PASSWORD:?definir MARIADB_PASSWORD dans stack/.env}@mariadb:3306/jardin
       TZ: Europe/Paris
     volumes:
       - ./data:/data:ro
